@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LadderSNU - 마이페이지 (Refined Minimal)</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+      rel="stylesheet"
+    />
+    <style>
+      /* =============================================================
+       Refined Minimal UI — same theme as main page
+    ============================================================= */
+      :root {
+        --brand: #0b3aa2;
+        --ink: #1e232e;
+        --ink-2: #5d6676;
+        --line: #e6e9ef;
+        --line-2: #d3d8e0;
+        --bg: #fff;
+        --muted: #f8f9fb;
+        --danger: #c73531;
+        --danger-bg: #fff4f3;
+        --radius: 6px;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family:
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          'Noto Sans KR',
+          Apple SD Gothic Neo,
+          Arial,
+          sans-serif;
+        font-weight: 400;
+        color: var(--ink);
+        background: var(--bg);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 36px 24px 72px;
+      }
+
+      /* Header (flat bar, no rounded card) */
+      .main-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 2px 14px;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 22px;
+      }
+      .app-header-link {
+        color: var(--brand);
+        text-decoration: none;
+        font-size: 21px;
+        font-weight: 600;
+        letter-spacing: -0.2px;
+      }
+      .user-nav {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .welcome-message {
+        font-size: 0.93rem;
+        color: var(--ink-2);
+      }
+      .welcome-message strong {
+        color: var(--ink);
+      }
+      .home-btn {
+        appearance: none;
+        border: 1px solid var(--line-2);
+        background: #fff;
+        color: var(--ink);
+        text-decoration: none;
+        padding: 6px 10px;
+        border-radius: 4px;
+        font-weight: 500;
+        line-height: 1.2;
+        font-size: 0.9rem;
+      }
+      .home-btn:hover {
+        background: var(--muted);
+      }
+
+      /* Page Title */
+      .page-title {
+        font-size: 22px;
+        font-weight: 600;
+        margin: 6px 0 18px;
+      }
+
+      /* Layout */
+      .mypage-layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+        align-items: start;
+      }
+      .mypage-main {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .mypage-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        position: sticky;
+        top: 16px;
+      }
+
+      /* Card (flat) */
+      .content-card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: #fff;
+      }
+      .content-card-header {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      .content-card-header h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .content-card-body {
+        padding: 14px 16px;
+      }
+
+      /* Liked notices list */
+      .notice-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .notice-item {
+        display: grid;
+        grid-template-columns: 3fr 1fr 1.5fr 1fr 1fr 0.5fr;
+        gap: 10px;
+        align-items: center;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      .notice-item:last-child {
+        border-bottom: 0;
+      }
+      .notice-item:hover {
+        background: #fafbfe;
+      }
+
+      .item-data {
+        color: var(--ink-2);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+      }
+      .item-title {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .item-title-link {
+        color: var(--ink);
+        font-weight: 600;
+        font-size: 1rem;
+        text-decoration: none;
+      }
+      .item-title-link:hover {
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      .item-title .sub-info {
+        color: #8c95a6;
+        font-size: 0.85rem;
+      }
+
+      .source-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .tag {
+        padding: 3px 6px;
+        border-radius: 4px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: #7a8497;
+        font-size: 0.78rem;
+        font-weight: 500;
+      }
+
+      .item-deadline {
+        font-weight: 600;
+        color: var(--danger);
+        font-size: 0.85rem;
+      }
+      .item-heart {
+        display: flex;
+        justify-content: flex-end;
+      }
+      .heart-btn {
+        font-size: 20px;
+        color: #9aa3b2;
+        cursor: pointer;
+      }
+      .heart-btn:hover {
+        color: var(--brand);
+      }
+      .heart-btn.liked {
+        color: var(--danger);
+      }
+
+      /* Recommendations (flat cards) */
+      .recommend-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .notice-card {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: #fff;
+      }
+      .card-content {
+        padding: 12px 16px;
+      }
+      .card-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .tag-category {
+        background: #f4f6fc;
+        color: var(--brand);
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border: 1px solid var(--line-2);
+      }
+      .tag-source {
+        background: #f4f6fc;
+        color: var(--ink);
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border: 1px solid var(--line-2);
+      }
+      .card-title {
+        font-weight: 600;
+        font-size: 1rem;
+        line-height: 1.45;
+        margin: 0;
+      }
+      .card-title-link {
+        color: var(--ink);
+        text-decoration: none;
+      }
+      .card-title-link:hover {
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      .card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid var(--line);
+        padding: 10px 16px;
+      }
+      .card-dates {
+        font-size: 0.9rem;
+        color: var(--ink-2);
+      }
+      .card-dates .deadline {
+        font-weight: 600;
+        color: var(--danger);
+      }
+
+      /* Switch */
+      .setting-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .setting-item:last-child {
+        border-bottom: 0;
+      }
+      .setting-text .title {
+        font-size: 0.98rem;
+        font-weight: 500;
+        color: var(--ink);
+      }
+      .setting-text .description {
+        font-size: 0.85rem;
+        color: var(--ink-2);
+        margin-top: 3px;
+      }
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 26px;
+      }
+      .switch input {
+        display: none;
+      }
+      .slider {
+        position: absolute;
+        inset: 0;
+        cursor: pointer;
+        background: #cfd5df;
+        border-radius: 26px;
+        transition: background 0.2s;
+      }
+      .slider:before {
+        content: '';
+        position: absolute;
+        height: 18px;
+        width: 18px;
+        left: 4px;
+        top: 4px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform 0.2s;
+      }
+      input:checked + .slider {
+        background: var(--brand);
+      }
+      input:checked + .slider:before {
+        transform: translateX(18px);
+      }
+
+      /* Floating Chatbot */
+      .floating-chatbot {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        color: #fff;
+        background: var(--brand);
+        border: none;
+      }
+      .floating-chatbot:hover {
+        filter: brightness(0.97);
+      }
+
+      /* Responsive */
+      @media (max-width: 920px) {
+        .mypage-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 680px) {
+        .notice-item {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+        .item-heart {
+          justify-content: flex-start;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+          animation: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="main-header">
+        <a href="#" class="app-header-link">LadderSNU</a>
+        <div class="user-nav">
+          <span class="welcome-message"><strong>이건무</strong>님 환영합니다</span>
+          <a href="#" class="home-btn" id="homeBtn">공지 홈으로</a>
+        </div>
+      </header>
+
+      <h1 class="page-title">마이페이지</h1>
+
+      <div class="mypage-layout">
+        <main class="mypage-main">
+          <section class="content-card">
+            <div class="content-card-header">
+              <h2>❤️ 이건무 님의 관심 활동</h2>
+            </div>
+            <ul class="notice-list" id="likedNoticeList">
+              <li
+                class="notice-item"
+                data-title="NAVER AI/DATA 신입 공채 설명회"
+                data-source="경력개발센터"
+                data-category="채용"
+                data-posted-date="10.20"
+              >
+                <div class="item-title">
+                  <a href="#" class="item-title-link">NAVER AI/DATA 신입 공채 설명회</a>
+                  <span class="sub-info">AI/데이터/신입</span>
+                </div>
+                <div class="item-data">채용</div>
+                <div class="item-data source-tags"><span class="tag">경력개발센터</span></div>
+                <div class="item-data">10.20</div>
+                <div class="item-data item-deadline">~ 10.31</div>
+                <div class="item-heart">
+                  <span class="heart-btn material-symbols-outlined liked" data-id="3"
+                    >favorite</span
+                  >
+                </div>
+              </li>
+              <li
+                class="notice-item"
+                data-title="2025-2학기 SNU 멘토링 멘티 모집"
+                data-source="학부대학"
+                data-category="멘토링"
+                data-posted-date="10.21"
+              >
+                <div class="item-title">
+                  <a href="#" class="item-title-link">2025-2학기 SNU 멘토링 멘티 모집</a>
+                  <span class="sub-info">멘토링/교육</span>
+                </div>
+                <div class="item-data">멘토링</div>
+                <div class="item-data source-tags"><span class="tag">학부대학</span></div>
+                <div class="item-data">10.21</div>
+                <div class="item-data item-deadline">~ 11.05</div>
+                <div class="item-heart">
+                  <span class="heart-btn material-symbols-outlined liked" data-id="2"
+                    >favorite</span
+                  >
+                </div>
+              </li>
+              <li
+                class="notice-item"
+                data-title="[서울시] 겨울방학 대학생 아르바이트 모집"
+                data-source="서울시"
+                data-category="인턴"
+                data-posted-date="10.18"
+              >
+                <div class="item-title">
+                  <a href="#" class="item-title-link">[서울시] 겨울방학 대학생 아르바이트 모집</a>
+                  <span class="sub-info">관공서/알바/행정</span>
+                </div>
+                <div class="item-data">인턴</div>
+                <div class="item-data source-tags"><span class="tag">대외활동</span></div>
+                <div class="item-data">10.18</div>
+                <div class="item-data item-deadline">~ 10.29</div>
+                <div class="item-heart">
+                  <span class="heart-btn material-symbols-outlined liked" data-id="5"
+                    >favorite</span
+                  >
+                </div>
+              </li>
+              <li
+                class="notice-item"
+                data-title="2025년도 기계제품설계 과제전 안내"
+                data-source="기계공학부"
+                data-category="연구"
+                data-posted-date="10.19"
+              >
+                <div class="item-title">
+                  <a href="#" class="item-title-link">2025년도 기계제품설계 과제전 안내</a>
+                  <span class="sub-info">설계/과제/연구</span>
+                </div>
+                <div class="item-data">연구</div>
+                <div class="item-data source-tags"><span class="tag">기계공학부</span></div>
+                <div class="item-data">10.19</div>
+                <div class="item-data item-deadline">~ 12.01</div>
+                <div class="item-heart">
+                  <span class="heart-btn material-symbols-outlined" data-id="4"
+                    >favorite_border</span
+                  >
+                </div>
+              </li>
+            </ul>
+          </section>
+        </main>
+
+        <aside class="mypage-sidebar">
+          <section class="content-card">
+            <div class="content-card-header">
+              <h2>🔔 알림 설정</h2>
+            </div>
+            <div class="content-card-body">
+              <div class="setting-item">
+                <div class="setting-text">
+                  <div class="title">오늘의 추천!</div>
+                  <div class="description">관심 활동과 맞는 새 공지를 메일로 받아요.</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="toggleRecommend" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="setting-item">
+                <div class="setting-text">
+                  <div class="title">마감 기한 Alert</div>
+                  <div class="description">관심 공지 마감 3일 전, 1일 전 알림</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="toggleDeadline" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section class="content-card">
+            <div class="content-card-header">
+              <h2>✨ 이건무 님을 위한 AI 추천</h2>
+            </div>
+            <div class="content-card-body recommend-list">
+              <div class="notice-card" data-title="[서울시] AI 기술인재 육성 프로그램 참여자 모집">
+                <div class="card-content">
+                  <div class="card-tags">
+                    <span class="tag-category">교육</span>
+                    <span class="tag-source">대외활동</span>
+                  </div>
+                  <p class="card-title">
+                    <a href="#" class="card-title-link"
+                      >[서울시] AI 기술인재 육성 프로그램 참여자 모집</a
+                    >
+                  </p>
+                </div>
+                <div class="card-footer">
+                  <div class="card-dates"><span class="deadline">~ 11.10</span></div>
+                  <span class="heart-btn material-symbols-outlined" data-id="rec1"
+                    >favorite_border</span
+                  >
+                </div>
+              </div>
+
+              <div class="notice-card" data-title="[과기부] 2025 데이터 분석 캠프">
+                <div class="card-content">
+                  <div class="card-tags">
+                    <span class="tag-category">채용</span>
+                    <span class="tag-source">대외활동</span>
+                  </div>
+                  <p class="card-title">
+                    <a href="#" class="card-title-link">[과기부] 2025 데이터 분석 캠프</a>
+                  </p>
+                </div>
+                <div class="card-footer">
+                  <div class="card-dates"><span class="deadline">~ 11.02</span></div>
+                  <span class="heart-btn material-symbols-outlined" data-id="rec2"
+                    >favorite_border</span
+                  >
+                </div>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <button class="floating-chatbot" id="chatbotBtn" aria-label="AI 챗봇 열기">
+      <span class="material-symbols-outlined" style="font-size: 20px">chat</span>
+    </button>
+
+    <script>
+      // 관심 항목에서 하트 클릭 시 제거
+      document.getElementById('likedNoticeList').addEventListener('click', (e) => {
+        const btn = e.target.closest('.heart-btn');
+        if (!btn) return;
+        const item = btn.closest('.notice-item');
+        item.style.transition = 'opacity .2s ease-out';
+        item.style.opacity = '0';
+        setTimeout(() => item.remove(), 200);
+      });
+
+      // 추천 카드 하트 토글
+      document.querySelector('.recommend-list').addEventListener('click', (e) => {
+        const btn = e.target.closest('.heart-btn');
+        if (!btn) return;
+        btn.classList.toggle('liked');
+        const liked = btn.classList.contains('liked');
+        btn.textContent = liked ? 'favorite' : 'favorite_border';
+        btn.style.fontVariationSettings = liked ? "'FILL' 1" : "'FILL' 0";
+        btn.setAttribute('aria-label', liked ? '즐겨찾기 제거' : '즐겨찾기');
+      });
+
+      // 홈 이동
+      document.getElementById('homeBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        alert('메인 페이지(공지 홈)로 돌아갑니다.');
+      });
+
+      // 챗봇 버튼
+      document.getElementById('chatbotBtn').addEventListener('click', () => {
+        alert('AI 챗봇 기능이 여기에 연결됩니다.');
+      });
+    </script>
+  </body>
+</html>

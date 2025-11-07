@@ -39,6 +39,7 @@ export default defineConfig([
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'react/react-in-jsx-scope': 'off',
       'no-unused-vars': 'warn',
+      'react/prop-types': 'off',
     },
 
     settings: { react: { version: 'detect' } },
