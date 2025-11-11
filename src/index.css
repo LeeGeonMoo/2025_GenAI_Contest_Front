@@ -6,6 +6,21 @@
   body {
     overflow-y: scroll;
   }
+
+  button,
+  [type='button'],
+  [role='button'] {
+    cursor: pointer; /* button 타입이 손가락 포인터가 나오도록. */
+  }
+
+  button:disabled,
+  [type='button']:disabled {
+    cursor: not-allowed;
+  }
+
+  a {
+    cursor: pointer;
+  }
 }
 
 .app-scale {
