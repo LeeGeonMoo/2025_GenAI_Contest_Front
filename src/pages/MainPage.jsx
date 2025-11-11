@@ -1,46 +1,62 @@
-const categories = ['전체', '대학생활', '장학', '연구', '채용', '대외활동', '기타'];
-
-const announcements = [
-  {
-    id: 1,
-    title: 'LG 청소년 AI 캠프 멘토 모집',
-    sub: 'AI/교육/봉사',
-    category: '대학생활',
-    source: ['전기정보공학부', '컴퓨터공학부', '사범대학'],
-    postedAt: '10.22',
-    deadline: '~ 10.27',
-    highlight: '추천',
-  },
-  {
-    id: 2,
-    title: '2025-2학기 SNU 멘토링 멘티 모집',
-    sub: '멘토링/교육',
-    category: '대학생활',
-    source: ['학부대학'],
-    postedAt: '10.21',
-    deadline: '~ 11.05',
-  },
-  {
-    id: 3,
-    title: 'NAVER AI 신입 공채 설명회',
-    sub: 'AI/데이터/신입',
-    category: '채용',
-    source: ['경력개발센터'],
-    postedAt: '10.20',
-    deadline: '없음',
-  },
-  {
-    id: 4,
-    title: '2025년도 기계제품설계 과제전 안내',
-    sub: '설계/과제/연구',
-    category: '연구',
-    source: ['기계공학부'],
-    postedAt: '10.19',
-    deadline: '~ 12.01',
-  },
-];
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 function MainPage() {
+  // 사용하고 있는 state 선언
+  const [categories, setCategories] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
+  const [favorites, setFavorites] = useState(() => new Set());
+
+  const activeCategory = categories[activeCategoryIndex];
+  const filteredAnnouncements =
+    activeCategoryIndex === 0 || !activeCategory
+      ? announcements
+      : announcements.filter((item) => item.category === activeCategory);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const response = await fetch('/dummy_data.json'); // 현재는 dummy_data를 긁어오지만 api 연결을 나중에 해야함.
+        if (!response.ok) {
+          throw new Error('Failed to fetch dummy data');
+        }
+        const data = await response.json();
+        setCategories(data.categories ?? []);
+        setAnnouncements(data.announcements ?? []);
+        setFetchError(null);
+      } catch (error) {
+        console.error(error);
+        setFetchError('데이터를 불러오지 못했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    if (categories.length > 0) {
+      setActiveCategoryIndex(0);
+    }
+  }, [categories]);
+
+  // 누르면 즐겨찾기 state에 추가, 누르면 즐겨찾기 삭제하는 함수
+  const toggleFavorite = (id) => {
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <div className="mx-auto w-full max-w-[1100px] px-6 pt-9 pb-20">
@@ -51,12 +67,12 @@ function MainPage() {
               <span>
                 <span className="font-semibold text-[#1e232e]">이건무</span> 님 환영합니다
               </span>
-              <button
-                type="button"
+              <Link
+                to="/mypage"
                 className="rounded-[4px] border border-[#d3d8e0] px-[10px] py-[6px] text-[14px] font-medium text-[#1e232e] transition-colors hover:bg-[#f8f9fb]"
               >
                 마이페이지
-              </button>
+              </Link>
             </div>
           </div>
         </header>
@@ -64,17 +80,19 @@ function MainPage() {
         <nav className="border-b border-[#e6e9ef] pb-3">
           <div className="flex flex-wrap gap-4 text-[15px] font-medium text-[#5d6676]">
             {categories.map((item, index) => {
-              const isActive = index === 0;
+              const isActive = index === activeCategoryIndex;
               return (
                 <button
                   key={item}
                   type="button"
+                  onClick={() => setActiveCategoryIndex(index)}
                   className={[
                     'pb-2 transition-colors',
                     isActive
                       ? 'border-b-2 border-[#0b3aa2] text-[#0b3aa2]'
                       : 'hover:text-[#1e232e]',
                   ].join(' ')}
+                  aria-pressed={isActive}
                 >
                   {item}
                 </button>
@@ -135,71 +153,98 @@ function MainPage() {
         </section>
 
         <div className="mt-6 flex items-center justify-between text-[14px] text-[#5d6676]">
-          <span>검색 결과 {announcements.length}개</span>
+          <span>
+            {isLoading ? '검색 결과 불러오는 중...' : `검색 결과 ${filteredAnnouncements.length}개`}
+          </span>
         </div>
 
         <section className="mt-3 overflow-hidden rounded-[6px] border border-[#e6e9ef] bg-white shadow-sm">
-          <div className="hidden grid-cols-[3fr,1.2fr,1.5fr,1fr,1fr,0.5fr] gap-4 border-b border-[#e6e9ef] bg-[#f8f9fb] px-4 py-3 text-[12px] font-semibold tracking-[0.05em] text-[#7a8497] uppercase sm:grid">
+          <div className="hidden grid-cols-[3fr_1.1fr_1.5fr_1fr_1fr_0.5fr] items-center gap-4 border-b border-[#e6e9ef] bg-[#f8f9fb] px-6 py-3 text-[12px] font-semibold tracking-[0.05em] text-[#7a8497] uppercase sm:grid">
             <span>제목</span>
-            <span>카테고리</span>
-            <span>포스팅된 곳</span>
-            <span>작성일</span>
-            <span>마감일</span>
+            <span className="text-center">카테고리</span>
+            <span className="text-center">포스팅된 곳</span>
+            <span className="text-center">작성일</span>
+            <span className="text-center">마감일</span>
             <span className="text-right">즐겨찾기</span>
           </div>
 
-          <div>
-            {announcements.map((item) => (
-              <article
-                key={item.id}
-                className="grid grid-cols-1 gap-4 border-b border-[#e6e9ef] px-4 py-4 text-[15px] text-[#1e232e] last:border-b-0 sm:grid-cols-[3fr,1.2fr,1.5fr,1fr,1fr,0.5fr] sm:items-center"
-              >
-                <div className="flex flex-col gap-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {item.highlight ? (
-                      <span className="inline-flex rounded-[4px] border border-[#d3d8e0] bg-[#f4f6fc] px-[6px] py-[2px] text-[11px] font-semibold tracking-[0.08em] text-[#0b3aa2] uppercase">
-                        {item.highlight}
+          {isLoading ? (
+            <div className="px-6 py-8 text-center text-[14px] text-[#7a8497]">
+              데이터를 불러오는 중입니다...
+            </div>
+          ) : fetchError ? (
+            <div className="px-6 py-8 text-center text-[14px] text-[#c73531]">{fetchError}</div>
+          ) : (
+            <ul className="divide-y divide-[#e6e9ef]">
+              {filteredAnnouncements.map((item) => {
+                const isFavorite = favorites.has(item.id);
+                return (
+                  <li
+                    key={item.id}
+                    className="grid grid-cols-1 items-start gap-4 px-6 py-4 text-[15px] text-[#1e232e] transition-colors hover:bg-[#f8f9fb] sm:grid-cols-[3fr_1.1fr_1.5fr_1fr_1fr_0.5fr] sm:items-center"
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {item.highlight ? (
+                          <span className="inline-flex rounded-[4px] border border-[#d3d8e0] bg-[#f4f6fc] px-[6px] py-[2px] text-[11px] font-semibold tracking-[0.08em] text-[#0b3aa2] uppercase">
+                            {item.highlight}
+                          </span>
+                        ) : null}
+                        <span className="text-[16px] font-semibold text-[#1e232e]">
+                          {item.title}
+                        </span>
+                      </div>
+                      <span className="block text-[13px] text-[#8c95a6]">{item.sub}</span>
+                    </div>
+
+                    <div className="text-[14px] text-[#5d6676] sm:text-center">{item.category}</div>
+
+                    <div className="flex flex-wrap justify-start gap-[6px] sm:justify-center">
+                      {item.source.map((label) => (
+                        <span
+                          key={label}
+                          className="inline-flex rounded-[4px] border border-[#e6e9ef] bg-white px-[6px] py-[3px] text-[12px] font-medium text-[#7a8497]"
+                        >
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="text-[14px] text-[#5d6676] sm:text-center">{item.postedAt}</div>
+
+                    <div className="flex justify-start sm:justify-center">
+                      <span className="inline-flex rounded-[4px] bg-[#fff4f3] px-[8px] py-[3px] text-[13px] font-semibold text-[#c73531]">
+                        {item.deadline}
                       </span>
-                    ) : null}
-                    <span className="text-[16px] font-semibold text-[#1e232e]">{item.title}</span>
-                  </div>
-                  <span className="text-[13px] text-[#8c95a6]">{item.sub}</span>
-                </div>
+                    </div>
 
-                <span className="text-[14px] text-[#5d6676]">{item.category}</span>
-
-                <div className="flex flex-wrap gap-[6px]">
-                  {item.source.map((label) => (
-                    <span
-                      key={label}
-                      className="inline-flex rounded-[4px] border border-[#e6e9ef] bg-white px-[6px] py-[3px] text-[12px] font-medium text-[#7a8497]"
-                    >
-                      {label}
-                    </span>
-                  ))}
-                </div>
-
-                <span className="text-[14px] text-[#5d6676]">{item.postedAt}</span>
-
-                <span className="inline-flex w-fit rounded-[4px] bg-[#fff4f3] px-[6px] py-[3px] text-[13px] font-semibold text-[#c73531]">
-                  {item.deadline}
-                </span>
-
-                <button
-                  type="button"
-                  className="hidden justify-end text-[#9aa3b2] transition-colors hover:text-[#0b3aa2] sm:flex"
-                  aria-label="즐겨찾기"
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6">
-                    <path
-                      d="m12 17.27-4.38 2.3a.75.75 0 0 1-1.09-.79l.84-4.88-3.54-3.45a.75.75 0 0 1 .42-1.28l4.9-.71 2.19-4.44a.75.75 0 0 1 1.34 0l2.19 4.44 4.9.71a.75.75 0 0 1 .42 1.28l-3.54 3.45.84 4.88a.75.75 0 0 1-1.09.79Z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                </button>
-              </article>
-            ))}
-          </div>
+                    <div className="flex justify-start sm:justify-center">
+                      <button
+                        type="button"
+                        onClick={() => toggleFavorite(item.id)}
+                        className={`flex h-6 w-6 items-center justify-center transition-colors ${
+                          isFavorite ? 'text-[#c73531]' : 'text-[#9aa3b2] hover:text-[#0b3aa2]'
+                        }`}
+                        aria-pressed={isFavorite}
+                        aria-label="즐겨찾기"
+                      >
+                        <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
+                          <path
+                            d="M12 21s-6.4-4.59-8.46-7.3C1.2 11.2 1.6 7.84 3.9 5.78 6 3.93 9.05 4.5 12 7.27c2.95-2.77 6-3.34 8.1-1.49 2.3 2.06 2.7 5.42.36 7.92C18.4 16.41 12 21 12 21Z"
+                            fill={isFavorite ? 'currentColor' : 'none'}
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <span className="sr-only">즐겨찾기</span>
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </section>
       </div>
     </div>
