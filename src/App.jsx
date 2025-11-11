@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import MainPage from './pages/MainPage';
 import MyPage from './pages/MyPage';
+import ChatWidgetButton from './components/ChatWidgetButton';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           </Routes>
         </div>
       </div>
+      <ChatWidgetButton />
     </BrowserRouter>
   );
 }
