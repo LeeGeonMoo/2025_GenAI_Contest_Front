@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import AnnouncementList from '../components/AnnouncementList';
 import HeartButton from '../components/HeartButton';
+import AnnouncementDetailModal from '../components/AnnouncementDetailModal';
 
 const initialLiked = [
   {
@@ -87,6 +88,7 @@ function MyPage() {
   const [recommendations, setRecommendations] = useState(initialRecommended);
   const [recommendEmail, setRecommendEmail] = useState(true);
   const [deadlineAlert, setDeadlineAlert] = useState(false);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
 
   const toggleLikedNotice = (id) => {
     setLikedNotices((prev) =>
@@ -134,6 +136,7 @@ function MyPage() {
                 announcements={likedNotices}
                 isFavorite={(item) => item.liked}
                 onToggleFavorite={(item) => toggleLikedNotice(item.id)}
+                onSelectAnnouncement={(item) => setSelectedAnnouncement(item)}
                 getSources={(item) => item.sources ?? []}
                 getDeadline={(item) => item.deadline ?? '-'}
                 rowClassName="grid grid-cols-1 gap-4 px-4 py-4 text-[15px] text-[#1e232e] transition-colors hover:bg-[#f8f9fb] sm:grid-cols-[3fr_1fr_1.5fr_1fr_1fr_0.5fr] sm:items-center"
@@ -213,6 +216,11 @@ function MyPage() {
           </aside>
         </div>
       </div>
+      <AnnouncementDetailModal
+        open={Boolean(selectedAnnouncement)}
+        onClose={() => setSelectedAnnouncement(null)}
+        announcement={selectedAnnouncement}
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ function AnnouncementList({
   favorites,
   isFavorite,
   onToggleFavorite,
+  onSelectAnnouncement,
   loading = false,
   error = null,
   emptyMessage = '표시할 공지가 없습니다.',
@@ -83,7 +84,17 @@ function AnnouncementList({
                       {highlight}
                     </span>
                   ) : null}
-                  <span className="text-[16px] font-semibold text-[#1e232e]">{item.title}</span>
+                  {onSelectAnnouncement ? (
+                    <button
+                      type="button"
+                      onClick={() => onSelectAnnouncement(item)}
+                      className="text-left text-[16px] font-semibold text-[#1e232e] transition-colors hover:text-[#0b3aa2]"
+                    >
+                      {item.title}
+                    </button>
+                  ) : (
+                    <span className="text-[16px] font-semibold text-[#1e232e]">{item.title}</span>
+                  )}
                 </div>
                 {item.sub ? (
                   <span className="block text-[13px] text-[#8c95a6]">{item.sub}</span>

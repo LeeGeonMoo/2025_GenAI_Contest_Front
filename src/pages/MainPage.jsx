@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AnnouncementList from '../components/AnnouncementList';
+import AnnouncementDetailModal from '../components/AnnouncementDetailModal';
 
 function MainPage() {
   // 사용하고 있는 state 선언
@@ -10,6 +11,7 @@ function MainPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [favorites, setFavorites] = useState(() => new Set());
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null); //
 
   const activeCategory = categories[activeCategoryIndex];
   const filteredAnnouncements =
@@ -166,12 +168,18 @@ function MainPage() {
             announcements={filteredAnnouncements}
             favorites={favorites}
             onToggleFavorite={(item) => toggleFavorite(item.id)}
+            onSelectAnnouncement={(item) => setSelectedAnnouncement(item)}
             loading={isLoading}
             error={fetchError}
             emptyMessage="조건에 맞는 공지가 없습니다."
           />
         </section>
       </div>
+      <AnnouncementDetailModal
+        open={Boolean(selectedAnnouncement)}
+        onClose={() => setSelectedAnnouncement(null)}
+        announcement={selectedAnnouncement} /* 해당 공지에 해당하는 모달 내용 고르기 위해서 */
+      />
     </div>
   );
 }
