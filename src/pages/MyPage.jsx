@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import AnnouncementList from '../components/AnnouncementList';
+import HeartButton from '../components/HeartButton';
 
 const initialLiked = [
   {
@@ -80,30 +82,6 @@ function Switch({ checked, onChange }) {
   );
 }
 
-function HeartButton({ active, onToggle }) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className={`flex h-6 w-6 items-center justify-center transition-colors ${
-        active ? 'text-[#c73531]' : 'text-[#9aa3b2] hover:text-[#0b3aa2]'
-      }`}
-      aria-pressed={active}
-    >
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
-        <path
-          d="M12 21s-6.4-4.59-8.46-7.3C1.2 11.2 1.6 7.84 3.9 5.78 6 3.93 9.05 4.5 12 7.27c2.95-2.77 6-3.34 8.1-1.49 2.3 2.06 2.7 5.42.36 7.92C18.4 16.41 12 21 12 21Z"
-          fill={active ? 'currentColor' : 'none'}
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <span className="sr-only">즐겨찾기</span>
-    </button>
-  );
-}
-
 function MyPage() {
   const [likedNotices, setLikedNotices] = useState(initialLiked);
   const [recommendations, setRecommendations] = useState(initialRecommended);
@@ -152,40 +130,17 @@ function MyPage() {
                   ❤️ 이건무 님의 관심 활동
                 </h2>
               </div>
-              <ul className="divide-y divide-[#e6e9ef]">
-                {likedNotices.map((item) => (
-                  <li
-                    key={item.id}
-                    className="grid grid-cols-1 gap-4 px-4 py-4 text-[15px] text-[#1e232e] sm:grid-cols-[3fr,1fr,1.5fr,1fr,1fr,0.5fr] sm:items-center"
-                  >
-                    <div className="space-y-1.5">
-                      <p className="text-[16px] font-semibold text-[#1e232e]">{item.title}</p>
-                      <p className="text-[13px] text-[#8c95a6]">{item.sub}</p>
-                    </div>
-                    <span className="text-[14px] text-[#5d6676]">{item.category}</span>
-                    <div className="flex flex-wrap gap-[6px] text-[12px]">
-                      {item.sources.map((source) => (
-                        <span
-                          key={source}
-                          className="inline-flex rounded-[4px] border border-[#e6e9ef] bg-white px-[6px] py-[3px] font-medium text-[#7a8497]"
-                        >
-                          {source}
-                        </span>
-                      ))}
-                    </div>
-                    <span className="text-[14px] text-[#5d6676]">{item.postedAt}</span>
-                    <span className="text-[13px] font-semibold text-[#c73531]">
-                      {item.deadline}
-                    </span>
-                    <div className="flex justify-end">
-                      <HeartButton
-                        active={item.liked}
-                        onToggle={() => toggleLikedNotice(item.id)}
-                      />
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <AnnouncementList
+                announcements={likedNotices}
+                isFavorite={(item) => item.liked}
+                onToggleFavorite={(item) => toggleLikedNotice(item.id)}
+                getSources={(item) => item.sources ?? []}
+                getDeadline={(item) => item.deadline ?? '-'}
+                rowClassName="grid grid-cols-1 gap-4 px-4 py-4 text-[15px] text-[#1e232e] transition-colors hover:bg-[#f8f9fb] sm:grid-cols-[3fr_1fr_1.5fr_1fr_1fr_0.5fr] sm:items-center"
+                listClassName="divide-y divide-[#e6e9ef]"
+                messagePaddingClassName="px-4"
+                emptyMessage="관심 활동이 없습니다."
+              />
             </section>
           </main>
 

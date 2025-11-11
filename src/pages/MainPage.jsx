@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import AnnouncementList from '../components/AnnouncementList';
 
 function MainPage() {
   // 사용하고 있는 state 선언
@@ -159,87 +160,14 @@ function MainPage() {
         </div>
 
         <section className="mt-3 overflow-hidden rounded-[6px] border border-[#e6e9ef] bg-white shadow-sm">
-          <div className="hidden grid-cols-[3fr_1.1fr_1.5fr_1fr_1fr_0.5fr] items-center gap-4 border-b border-[#e6e9ef] bg-[#f8f9fb] px-6 py-3 text-[12px] font-semibold tracking-[0.05em] text-[#7a8497] uppercase sm:grid">
-            <span>제목</span>
-            <span className="text-center">카테고리</span>
-            <span className="text-center">포스팅된 곳</span>
-            <span className="text-center">작성일</span>
-            <span className="text-center">마감일</span>
-            <span className="text-right">즐겨찾기</span>
-          </div>
-
-          {isLoading ? (
-            <div className="px-6 py-8 text-center text-[14px] text-[#7a8497]">
-              데이터를 불러오는 중입니다...
-            </div>
-          ) : fetchError ? (
-            <div className="px-6 py-8 text-center text-[14px] text-[#c73531]">{fetchError}</div>
-          ) : (
-            <ul className="divide-y divide-[#e6e9ef]">
-              {filteredAnnouncements.map((item) => {
-                const isFavorite = favorites.has(item.id);
-                return (
-                  <li
-                    key={item.id}
-                    className="grid grid-cols-1 items-start gap-4 px-6 py-4 text-[15px] text-[#1e232e] transition-colors hover:bg-[#f8f9fb] sm:grid-cols-[3fr_1.1fr_1.5fr_1fr_1fr_0.5fr] sm:items-center"
-                  >
-                    <div className="space-y-1.5">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[16px] font-semibold text-[#1e232e]">
-                          {item.title}
-                        </span>
-                      </div>
-                      <span className="block text-[13px] text-[#8c95a6]">{item.sub}</span>
-                    </div>
-
-                    <div className="text-[14px] text-[#5d6676] sm:text-center">{item.category}</div>
-
-                    <div className="flex flex-wrap justify-start gap-[6px] sm:justify-center">
-                      {item.source.map((label) => (
-                        <span
-                          key={label}
-                          className="inline-flex rounded-[4px] border border-[#e6e9ef] bg-white px-[6px] py-[3px] text-[12px] font-medium text-[#7a8497]"
-                        >
-                          {label}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="text-[14px] text-[#5d6676] sm:text-center">{item.postedAt}</div>
-
-                    <div className="flex justify-start sm:justify-center">
-                      <span className="inline-flex rounded-[4px] bg-[#fff4f3] px-[8px] py-[3px] text-[13px] font-semibold text-[#c73531]">
-                        {item.deadline}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-start sm:justify-center">
-                      <button
-                        type="button"
-                        onClick={() => toggleFavorite(item.id)}
-                        className={`flex h-6 w-6 items-center justify-center transition-colors ${
-                          isFavorite ? 'text-[#c73531]' : 'text-[#9aa3b2] hover:text-[#0b3aa2]'
-                        }`}
-                        aria-pressed={isFavorite}
-                        aria-label="즐겨찾기"
-                      >
-                        <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
-                          <path
-                            d="M12 21s-6.4-4.59-8.46-7.3C1.2 11.2 1.6 7.84 3.9 5.78 6 3.93 9.05 4.5 12 7.27c2.95-2.77 6-3.34 8.1-1.49 2.3 2.06 2.7 5.42.36 7.92C18.4 16.41 12 21 12 21Z"
-                            fill={isFavorite ? 'currentColor' : 'none'}
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                        <span className="sr-only">즐겨찾기</span>
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          <AnnouncementList // 공지리스트를 컴포넌트로 밖으로 싹 뺐음. 각종 state 넘겨주면서.
+            announcements={filteredAnnouncements}
+            favorites={favorites}
+            onToggleFavorite={(item) => toggleFavorite(item.id)}
+            loading={isLoading}
+            error={fetchError}
+            emptyMessage="조건에 맞는 공지가 없습니다."
+          />
         </section>
       </div>
     </div>
