@@ -63,7 +63,9 @@ function MainPage() {
       <div className="mx-auto w-full max-w-[1100px] px-6 pt-9 pb-20">
         <header className="mb-6 border-b border-[#e6e9ef] pt-[10px] pb-[14px]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="text-[21px] font-semibold tracking-[-0.2px] text-[#0b3aa2]">NotiSNU</h1>
+            <Link to="/" className="text-[21px] font-semibold tracking-[-0.2px] text-[#0b3aa2]">
+              NotiSNU
+            </Link>
             <div className="flex items-center gap-3 text-[15px] text-[#5d6676]">
               <span>
                 <span className="font-semibold text-[#1e232e]">이건무</span> 님 환영합니다
