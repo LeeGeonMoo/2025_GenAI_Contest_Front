@@ -185,11 +185,6 @@ function MainPage() {
                   >
                     <div className="space-y-1.5">
                       <div className="flex flex-wrap items-center gap-2">
-                        {item.highlight ? (
-                          <span className="inline-flex rounded-[4px] border border-[#d3d8e0] bg-[#f4f6fc] px-[6px] py-[2px] text-[11px] font-semibold tracking-[0.08em] text-[#0b3aa2] uppercase">
-                            {item.highlight}
-                          </span>
-                        ) : null}
                         <span className="text-[16px] font-semibold text-[#1e232e]">
                           {item.title}
                         </span>
