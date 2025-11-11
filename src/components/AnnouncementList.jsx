@@ -7,6 +7,7 @@ function AnnouncementList({
   favorites,
   isFavorite,
   onToggleFavorite,
+  onSelectAnnouncement,
   loading = false,
   error = null,
   emptyMessage = '표시할 공지가 없습니다.',
@@ -83,7 +84,17 @@ function AnnouncementList({
                       {highlight}
                     </span>
                   ) : null}
-                  <span className="text-[16px] font-semibold text-[#1e232e]">{item.title}</span>
+                  {onSelectAnnouncement ? (
+                    <button
+                      type="button"
+                      onClick={() => onSelectAnnouncement(item)}
+                      className="text-left text-[16px] font-semibold text-[#1e232e] transition-colors hover:text-[#0b3aa2]"
+                    >
+                      {item.title}
+                    </button>
+                  ) : (
+                    <span className="text-[16px] font-semibold text-[#1e232e]">{item.title}</span>
+                  )}
                 </div>
                 {item.sub ? (
                   <span className="block text-[13px] text-[#8c95a6]">{item.sub}</span>
@@ -94,12 +105,12 @@ function AnnouncementList({
                 {item.category ?? '-'}
               </div>
 
-              <div className="flex flex-wrap justify-start gap-[6px] sm:justify-center">
+              <div className="flex flex-col items-center gap-[6px] text-center">
                 {sources && sources.length > 0 ? (
                   sources.map((label) => (
                     <span
                       key={label}
-                      className="inline-flex rounded-[4px] border border-[#e6e9ef] bg-white px-[6px] py-[3px] text-[12px] font-medium text-[#7a8497]"
+                      className="inline-flex rounded-[4px] border border-[#e0e5ef] bg-white px-[6px] py-[3px] text-[12px] font-medium text-[#7a8497]"
                     >
                       {label}
                     </span>

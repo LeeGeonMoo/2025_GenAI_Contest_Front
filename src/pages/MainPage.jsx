@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AnnouncementList from '../components/AnnouncementList';
+import AnnouncementDetailModal from '../components/AnnouncementDetailModal';
 
 function MainPage() {
   // 사용하고 있는 state 선언
@@ -10,6 +11,7 @@ function MainPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [favorites, setFavorites] = useState(() => new Set());
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null); //
 
   const activeCategory = categories[activeCategoryIndex];
   const filteredAnnouncements =
@@ -25,7 +27,11 @@ function MainPage() {
           throw new Error('Failed to fetch dummy data');
         }
         const data = await response.json();
-        setCategories(data.categories ?? []);
+        const fetchedCategories = data.categories ?? [];
+        const uniqueCategories = fetchedCategories.filter(
+          (item, index) => fetchedCategories.indexOf(item) === index,
+        );
+        setCategories(uniqueCategories);
         setAnnouncements(data.announcements ?? []);
         setFetchError(null);
       } catch (error) {
@@ -63,7 +69,9 @@ function MainPage() {
       <div className="mx-auto w-full max-w-[1100px] px-6 pt-9 pb-20">
         <header className="mb-6 border-b border-[#e6e9ef] pt-[10px] pb-[14px]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="text-[21px] font-semibold tracking-[-0.2px] text-[#0b3aa2]">NotiSNU</h1>
+            <Link to="/" className="text-[21px] font-semibold tracking-[-0.2px] text-[#0b3aa2]">
+              NotiSNU
+            </Link>
             <div className="flex items-center gap-3 text-[15px] text-[#5d6676]">
               <span>
                 <span className="font-semibold text-[#1e232e]">이건무</span> 님 환영합니다
@@ -82,20 +90,37 @@ function MainPage() {
           <div className="flex flex-wrap gap-4 text-[15px] font-medium text-[#5d6676]">
             {categories.map((item, index) => {
               const isActive = index === activeCategoryIndex;
+              const isRecommended = item === '추천';
+              const classes = [
+                'pb-2 transition-colors',
+                isActive ? 'border-b-2 border-[#0b3aa2] text-[#0b3aa2]' : 'hover:text-[#1e232e]',
+                isRecommended
+                  ? 'flex items-center gap-1.5'
+                  : '' /* 별 표시 추가 때문에 추가 가운데 정렬 추가되는 부분 */,
+              ]
+                .filter(Boolean)
+                .join(' ');
               return (
                 <button
                   key={item}
                   type="button"
                   onClick={() => setActiveCategoryIndex(index)}
-                  className={[
-                    'pb-2 transition-colors',
-                    isActive
-                      ? 'border-b-2 border-[#0b3aa2] text-[#0b3aa2]'
-                      : 'hover:text-[#1e232e]',
-                  ].join(' ')}
+                  className={classes}
                   aria-pressed={isActive}
                 >
-                  {item}
+                  {isRecommended /* 별 표시 추가하는 부분 */ ? (
+                    <span className="flex items-center gap-1.5">
+                      <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4">
+                        <path
+                          d="m8 1.5 1.75 4.3 4.75.28-3.7 3.03 1.16 4.63L8 11.46l-3.96 2.28 1.16-4.63-3.7-3.03 4.75-.28L8 1.5Z"
+                          fill={isActive ? 'currentColor' : '#9aa3b2'}
+                        />
+                      </svg>
+                      추천
+                    </span>
+                  ) : (
+                    item
+                  )}
                 </button>
               );
             })}
@@ -159,17 +184,35 @@ function MainPage() {
           </span>
         </div>
 
+        {activeCategory === '추천' /* 추천 탭에서만 위에 간단한 설명 추가*/ ? (
+          <div className="mt-2 flex items-center gap-2 rounded-[6px] border border-[#e3e9f6] bg-[#f8faff] px-3 py-2 text-[13px] text-[#5d6676]">
+            <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4 text-[#0b3aa2]">
+              <path
+                d="m8 1.5 1.75 4.3 4.75.28-3.7 3.03 1.16 4.63L8 11.46l-3.96 2.28 1.16-4.63-3.7-3.03 4.75-.28L8 1.5Z"
+                fill="currentColor"
+              />
+            </svg>
+            사용자의 프로필을 기반으로, NotiSNU가 추천하는 활동들이에요.
+          </div>
+        ) : null}
+
         <section className="mt-3 overflow-hidden rounded-[6px] border border-[#e6e9ef] bg-white shadow-sm">
           <AnnouncementList // 공지리스트를 컴포넌트로 밖으로 싹 뺐음. 각종 state 넘겨주면서.
             announcements={filteredAnnouncements}
             favorites={favorites}
             onToggleFavorite={(item) => toggleFavorite(item.id)}
+            onSelectAnnouncement={(item) => setSelectedAnnouncement(item)}
             loading={isLoading}
             error={fetchError}
             emptyMessage="조건에 맞는 공지가 없습니다."
           />
         </section>
       </div>
+      <AnnouncementDetailModal
+        open={Boolean(selectedAnnouncement)}
+        onClose={() => setSelectedAnnouncement(null)}
+        announcement={selectedAnnouncement} /* 해당 공지에 해당하는 모달 내용 고르기 위해서 */
+      />
     </div>
   );
 }

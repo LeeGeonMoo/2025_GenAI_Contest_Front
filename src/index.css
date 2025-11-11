@@ -1,3 +1,43 @@
 @import 'tailwindcss';
 
 /* tailwindcss 사용 위해서 이거 필요함.. */
+
+@layer base {
+  body {
+    overflow-y: scroll;
+  }
+
+  button,
+  [type='button'],
+  [role='button'] {
+    cursor: pointer; /* button 타입이 손가락 포인터가 나오도록. */
+  }
+
+  button:disabled,
+  [type='button']:disabled {
+    cursor: not-allowed;
+  }
+
+  a {
+    cursor: pointer;
+  }
+}
+
+.app-scale {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.app-scale__inner {
+  width: 100%;
+  zoom: 0.9; /* 비율 조절용... 임시방편. */
+  transform-origin: top center;
+}
+
+@supports not (zoom: 1) {
+  .app-scale__inner {
+    transform: scale(0.9);
+    width: calc(100% / 0.9);
+  }
+}
