@@ -9,6 +9,15 @@ function AnnouncementDetailModal({ open, onClose, announcement }) {
 
   const sourceList = sources ?? source ?? [];
 
+  // source가 객체 배열인지 문자열 배열인지 확인하고 처리
+  const getSourceName = (item) => {
+    return typeof item === 'string' ? item : item.name;
+  };
+
+  const getSourceUrl = (item) => {
+    return typeof item === 'object' && item.url ? item.url : null;
+  };
+
   return (
     <div
       role="dialog"
@@ -57,14 +66,33 @@ function AnnouncementDetailModal({ open, onClose, announcement }) {
             <dt className="text-[13px] font-semibold text-[#7a8497]">포스팅된 곳</dt>
             <dd className="flex flex-col gap-2">
               {sourceList && sourceList.length > 0 ? (
-                sourceList.map((item) => (
-                  <span
-                    key={item}
-                    className="inline-flex rounded-[6px] border border-[#e0e5ef] bg-white px-[10px] py-[6px] text-[13px] font-medium text-[#526080]"
-                  >
-                    {item}
-                  </span>
-                ))
+                sourceList.map((item, index) => {
+                  const sourceName = getSourceName(item);
+                  const sourceUrl = getSourceUrl(item);
+
+                  if (sourceUrl) {
+                    return (
+                      <a
+                        key={`${sourceName}-${index}`}
+                        href={sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex cursor-pointer rounded-[6px] border border-[#e0e5ef] bg-white px-[10px] py-[6px] text-[13px] font-medium text-[#526080] transition-colors hover:border-[#0b3aa2] hover:bg-[#f8faff] hover:text-[#0b3aa2]"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {sourceName}
+                      </a>
+                    );
+                  }
+                  return (
+                    <span
+                      key={`${sourceName}-${index}`}
+                      className="inline-flex rounded-[6px] border border-[#e0e5ef] bg-white px-[10px] py-[6px] text-[13px] font-medium text-[#526080]"
+                    >
+                      {sourceName}
+                    </span>
+                  );
+                })
               ) : (
                 <span className="text-[13px] text-[#9aa3b2]">-</span>
               )}

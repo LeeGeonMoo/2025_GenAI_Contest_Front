@@ -12,7 +12,15 @@ function AnnouncementList({
   error = null,
   emptyMessage = '표시할 공지가 없습니다.',
   headerLabels = DEFAULT_HEADER_LABELS,
-  getSources = (item) => item.source ?? [],
+  getSources = (item) => {
+    // source가 객체 배열인 경우 그대로 반환, 문자열 배열인 경우 호환성 유지
+    const sources = item.source ?? [];
+    if (sources.length > 0 && typeof sources[0] === 'string') {
+      // 문자열 배열인 경우 객체 배열로 변환 (URL 없음)
+      return sources.map((name) => ({ name, url: null }));
+    }
+    return sources;
+  },
   getDeadline = (item) => item.deadline ?? '-',
   getHighlight = (item) => item.highlight,
   rowClassName = 'grid grid-cols-1 items-start gap-4 px-6 py-4 text-[15px] text-[#1e232e] transition-colors hover:bg-[#f8f9fb] sm:grid-cols-[3fr_1.1fr_1.5fr_1fr_1fr_0.5fr] sm:items-center',
@@ -107,14 +115,34 @@ function AnnouncementList({
 
               <div className="flex flex-col items-center gap-[6px] text-center">
                 {sources && sources.length > 0 ? (
-                  sources.map((label) => (
-                    <span
-                      key={label}
-                      className="inline-flex rounded-[4px] border border-[#e0e5ef] bg-white px-[6px] py-[3px] text-[12px] font-medium text-[#7a8497]"
-                    >
-                      {label}
-                    </span>
-                  ))
+                  sources.map((sourceItem, index) => {
+                    const sourceName =
+                      typeof sourceItem === 'string' ? sourceItem : sourceItem.name;
+                    const sourceUrl = typeof sourceItem === 'object' ? sourceItem.url : null;
+
+                    if (sourceUrl) {
+                      return (
+                        <a
+                          key={`${sourceName}-${index}`}
+                          href={sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex cursor-pointer rounded-[4px] border border-[#e0e5ef] bg-white px-[6px] py-[3px] text-[12px] font-medium text-[#7a8497] transition-colors hover:border-[#0b3aa2] hover:bg-[#f8faff] hover:text-[#0b3aa2]"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {sourceName}
+                        </a>
+                      );
+                    }
+                    return (
+                      <span
+                        key={`${sourceName}-${index}`}
+                        className="inline-flex rounded-[4px] border border-[#e0e5ef] bg-white px-[6px] py-[3px] text-[12px] font-medium text-[#7a8497]"
+                      >
+                        {sourceName}
+                      </span>
+                    );
+                  })
                 ) : (
                   <span className="text-[12px] text-[#9aa3b2]">-</span>
                 )}
