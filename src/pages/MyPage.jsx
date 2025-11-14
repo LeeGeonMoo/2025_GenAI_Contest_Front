@@ -4,386 +4,6 @@ import AnnouncementList from '../components/AnnouncementList';
 import HeartButton from '../components/HeartButton';
 import AnnouncementDetailModal from '../components/AnnouncementDetailModal';
 
-const initialLiked = [
-  {
-    id: 'liked-1',
-    title: 'NAVER AI/DATA 신입 공채 설명회',
-    sub: 'AI/데이터/신입',
-    category: '채용',
-    sources: [
-      {
-        name: '경력개발센터',
-        url: 'https://career.snu.ac.kr/notice',
-      },
-    ],
-    postedAt: '10.20',
-    deadline: '~ 10.31',
-    liked: true,
-  },
-  {
-    id: 'liked-2',
-    title: '2025-2학기 SNU 멘토링 멘티 모집',
-    sub: '멘토링/교육',
-    category: '멘토링',
-    sources: [
-      {
-        name: '학부대학',
-        url: 'https://uaa.snu.ac.kr/board/notice',
-      },
-    ],
-    postedAt: '10.21',
-    deadline: '~ 11.05',
-    liked: true,
-  },
-  {
-    id: 'liked-3',
-    title: '[서울시] 겨울방학 대학생 아르바이트 모집',
-    sub: '관공서/알바/행정',
-    category: '인턴',
-    sources: [
-      {
-        name: '대외활동',
-        url: 'https://uaa.snu.ac.kr/board/external',
-      },
-    ],
-    postedAt: '10.18',
-    deadline: '~ 10.29',
-    liked: true,
-  },
-  {
-    id: 'liked-4',
-    title: '2025년도 기계제품설계 과제전 안내',
-    sub: '설계/과제/연구',
-    category: '연구',
-    sources: [
-      {
-        name: '기계공학부',
-        url: 'https://me.snu.ac.kr/board/notice',
-      },
-    ],
-    postedAt: '10.19',
-    deadline: '~ 12.01',
-    liked: true,
-  },
-  {
-    id: 'liked-5',
-    title: '[카카오] AI 엔지니어 인턴십 모집',
-    sub: '인턴/채용/AI',
-    category: '채용',
-    sources: [
-      {
-        name: '경력개발센터',
-        url: 'https://career.snu.ac.kr/notice',
-      },
-    ],
-    postedAt: '10.17',
-    deadline: '~ 10.28',
-    liked: true,
-  },
-  {
-    id: 'liked-6',
-    title: '2025년도 봄학기 교환학생 프로그램 모집',
-    sub: '국제교류/교환학생',
-    category: '대외활동',
-    sources: [
-      {
-        name: '국제협력본부',
-        url: 'https://oia.snu.ac.kr/board/exchange',
-      },
-    ],
-    postedAt: '10.16',
-    deadline: '~ 11.15',
-    liked: true,
-  },
-  {
-    id: 'liked-7',
-    title: 'AI 연구실 학부연구생 모집',
-    sub: '연구/학부연구생',
-    category: '연구',
-    sources: [
-      {
-        name: '컴퓨터공학부',
-        url: 'https://cse.snu.ac.kr/community/notice',
-      },
-    ],
-    postedAt: '10.15',
-    deadline: '~ 10.30',
-    liked: true,
-  },
-  {
-    id: 'liked-8',
-    title: '2025년도 국가장학금 신청 안내',
-    sub: '장학금/등록금',
-    category: '장학',
-    sources: [
-      {
-        name: '학부대학',
-        url: 'https://uaa.snu.ac.kr/board/scholarship',
-      },
-    ],
-    postedAt: '10.14',
-    deadline: '~ 11.05',
-    liked: true,
-  },
-  {
-    id: 'liked-9',
-    title: '[삼성전자] 2025 상반기 신입사원 공채',
-    sub: '채용/신입/공채',
-    category: '채용',
-    sources: [
-      {
-        name: '경력개발센터',
-        url: 'https://career.snu.ac.kr/notice',
-      },
-    ],
-    postedAt: '10.13',
-    deadline: '~ 11.10',
-    liked: true,
-  },
-  {
-    id: 'liked-10',
-    title: '2025년도 창업 아이디어 경진대회',
-    sub: '창업/경진대회',
-    category: '대외활동',
-    sources: [
-      {
-        name: '경력개발센터',
-        url: 'https://career.snu.ac.kr/notice',
-      },
-    ],
-    postedAt: '10.12',
-    deadline: '~ 11.20',
-    liked: true,
-  },
-  {
-    id: 'liked-11',
-    title: '겨울방학 해외봉사 프로그램 참가자 모집',
-    sub: '봉사/해외/방학',
-    category: '대외활동',
-    sources: [
-      {
-        name: '학부대학',
-        url: 'https://uaa.snu.ac.kr/board/external',
-      },
-    ],
-    postedAt: '10.11',
-    deadline: '~ 10.31',
-    liked: true,
-  },
-  {
-    id: 'liked-12',
-    title: '2025년도 교내 동아리 신규 가입 모집',
-    sub: '동아리/교내활동',
-    category: '대학생활',
-    sources: [
-      {
-        name: '학부대학',
-        url: 'https://uaa.snu.ac.kr/board/club',
-      },
-    ],
-    postedAt: '10.10',
-    deadline: '~ 10.25',
-    liked: true,
-  },
-  {
-    id: 'liked-13',
-    title: '데이터 사이언스 특강 안내',
-    sub: '특강/데이터/학술',
-    category: '연구',
-    sources: [
-      {
-        name: '전기정보공학부',
-        url: 'https://ee.snu.ac.kr/community/notice',
-      },
-    ],
-    postedAt: '10.09',
-    deadline: '없음',
-    liked: true,
-  },
-  {
-    id: 'liked-14',
-    title: '[네이버] 클라우드 플랫폼 엔지니어 채용',
-    sub: '채용/클라우드/경력',
-    category: '채용',
-    sources: [
-      {
-        name: '경력개발센터',
-        url: 'https://career.snu.ac.kr/notice',
-      },
-    ],
-    postedAt: '10.08',
-    deadline: '~ 11.05',
-    liked: true,
-  },
-  {
-    id: 'liked-15',
-    title: '2025년도 성적우수 장학금 신청',
-    sub: '장학금/성적우수',
-    category: '장학',
-    sources: [
-      {
-        name: '학부대학',
-        url: 'https://uaa.snu.ac.kr/board/scholarship',
-      },
-    ],
-    postedAt: '10.07',
-    deadline: '~ 10.20',
-    liked: true,
-  },
-  {
-    id: 'liked-16',
-    title: 'AI 연구원 RA 모집 공고',
-    sub: 'RA/연구/인턴',
-    category: '연구',
-    sources: [
-      {
-        name: '컴퓨터공학부',
-        url: 'https://cse.snu.ac.kr/community/notice',
-      },
-    ],
-    postedAt: '10.06',
-    deadline: '~ 10.25',
-    liked: true,
-  },
-  {
-    id: 'liked-17',
-    title: '2025년도 봄학기 수강신청 안내',
-    sub: '수강신청/학사',
-    category: '대학생활',
-    sources: [
-      {
-        name: '학부대학',
-        url: 'https://uaa.snu.ac.kr/board/academic',
-      },
-    ],
-    postedAt: '10.05',
-    deadline: '~ 10.15',
-    liked: true,
-  },
-  {
-    id: 'liked-18',
-    title: '[구글] 소프트웨어 엔지니어 신입 채용',
-    sub: '채용/신입/구글',
-    category: '채용',
-    sources: [
-      {
-        name: '경력개발센터',
-        url: 'https://career.snu.ac.kr/notice',
-      },
-    ],
-    postedAt: '10.04',
-    deadline: '~ 11.01',
-    liked: true,
-  },
-  {
-    id: 'liked-19',
-    title: '2025년도 학술대회 논문 발표 모집',
-    sub: '학술대회/논문',
-    category: '연구',
-    sources: [
-      {
-        name: '전기정보공학부',
-        url: 'https://ee.snu.ac.kr/community/notice',
-      },
-    ],
-    postedAt: '10.03',
-    deadline: '~ 11.10',
-    liked: true,
-  },
-  {
-    id: 'liked-20',
-    title: '겨울방학 해외연수 프로그램 안내',
-    sub: '해외연수/방학',
-    category: '대외활동',
-    sources: [
-      {
-        name: '국제협력본부',
-        url: 'https://oia.snu.ac.kr/board/program',
-      },
-    ],
-    postedAt: '10.02',
-    deadline: '~ 10.20',
-    liked: true,
-  },
-  {
-    id: 'liked-21',
-    title: '[마이크로소프트] Azure 인턴십 프로그램',
-    sub: '인턴/클라우드/MS',
-    category: '채용',
-    sources: [
-      {
-        name: '경력개발센터',
-        url: 'https://career.snu.ac.kr/notice',
-      },
-    ],
-    postedAt: '10.01',
-    deadline: '~ 10.25',
-    liked: true,
-  },
-  {
-    id: 'liked-22',
-    title: '2025년도 교내 공모전 작품 접수',
-    sub: '공모전/창작',
-    category: '대외활동',
-    sources: [
-      {
-        name: '학부대학',
-        url: 'https://uaa.snu.ac.kr/board/contest',
-      },
-    ],
-    postedAt: '09.30',
-    deadline: '~ 11.15',
-    liked: true,
-  },
-  {
-    id: 'liked-23',
-    title: '기계공학부 졸업논문 제출 안내',
-    sub: '졸업논문/학사',
-    category: '연구',
-    sources: [
-      {
-        name: '기계공학부',
-        url: 'https://me.snu.ac.kr/board/notice',
-      },
-    ],
-    postedAt: '09.29',
-    deadline: '~ 12.10',
-    liked: true,
-  },
-  {
-    id: 'liked-24',
-    title: '[아마존] AWS 클라우드 엔지니어 채용',
-    sub: '채용/AWS/클라우드',
-    category: '채용',
-    sources: [
-      {
-        name: '경력개발센터',
-        url: 'https://career.snu.ac.kr/notice',
-      },
-    ],
-    postedAt: '09.28',
-    deadline: '~ 11.08',
-    liked: true,
-  },
-];
-
-const initialRecommended = [
-  {
-    id: 'rec-1',
-    title: '[서울시] AI 기술인재 육성 프로그램 참여자 모집',
-    tags: ['교육', '대외활동'],
-    deadline: '~ 11.10',
-    liked: false,
-  },
-  {
-    id: 'rec-2',
-    title: '[과기부] 2025 데이터 분석 캠프',
-    tags: ['채용', '대외활동'],
-    deadline: '~ 11.02',
-    liked: false,
-  },
-];
-
 function Switch({ checked, onChange }) {
   return (
     <button
@@ -414,13 +34,14 @@ const INTEREST_CATEGORIES = {
 
 function MyPage() {
   const [activeTab, setActiveTab] = useState('activities'); // 'activities' or 'profile'
-  const [likedNotices, setLikedNotices] = useState(initialLiked);
-  const [recommendations, setRecommendations] = useState(initialRecommended);
+  const [likedNotices, setLikedNotices] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
   const [recommendEmail, setRecommendEmail] = useState(true);
   const [deadlineAlert, setDeadlineAlert] = useState(false);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingData, setIsLoadingData] = useState(true);
   const pageSize = 20;
 
   // 프로필 수정 폼 상태
@@ -463,6 +84,27 @@ function MyPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [activeTab]);
+
+  // 더미데이터 로드
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const response = await fetch('/interested_dummy_data.json');
+        if (!response.ok) {
+          throw new Error('Failed to fetch interested dummy data');
+        }
+        const data = await response.json();
+        setLikedNotices(data.liked ?? []);
+        setRecommendations(data.recommended ?? []);
+      } catch (error) {
+        console.error('Error loading interested dummy data:', error);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">
