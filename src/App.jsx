@@ -1,9 +1,13 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import MainPage from './pages/MainPage';
 import MyPage from './pages/MyPage';
 import ChatWidgetButton from './components/ChatWidgetButton';
+import ChatWidget from './components/ChatWidget';
 
 function App() {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
   return (
     <BrowserRouter>
       <div className="app-scale">
@@ -14,7 +18,8 @@ function App() {
           </Routes>
         </div>
       </div>
-      <ChatWidgetButton />
+      {!isChatOpen && <ChatWidgetButton onClick={() => setIsChatOpen(true)} />}
+      <ChatWidget isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </BrowserRouter>
   );
 }

@@ -1,9 +1,6 @@
 function ChatWidgetButton({ onClick, label = '도움이 필요하신가요?' }) {
   return (
     <div className="fixed right-6 bottom-6 z-50 flex items-end gap-3">
-      <div className="hidden rounded-[12px] bg-white px-4 py-3 text-[13px] font-medium text-[#1e232e] shadow-lg md:block">
-        {/*<span>{label}</span>*/}
-      </div>
       <button
         type="button"
         onClick={onClick}
