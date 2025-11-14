@@ -2,10 +2,20 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AnnouncementList from '../components/AnnouncementList';
 import AnnouncementDetailModal from '../components/AnnouncementDetailModal';
+import { getFeed } from '../api/feed';
 
 function MainPage() {
   // 사용하고 있는 state 선언
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState([
+    '전체',
+    '대학생활',
+    '장학',
+    '연구',
+    '채용',
+    '대외활동',
+    '기타',
+    '추천',
+  ]);
   const [announcements, setAnnouncements] = useState([]);
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -15,75 +25,113 @@ function MainPage() {
   const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
   const [selectedSources, setSelectedSources] = useState(() => new Set());
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const pageSize = 20;
 
   const activeCategory = categories[activeCategoryIndex];
 
-  // 카테고리 및 출처 필터링
-  let filteredAnnouncements =
-    activeCategoryIndex === 0 || !activeCategory
-      ? announcements
-      : announcements.filter((item) => item.category === activeCategory);
+  // 백엔드 응답을 프론트엔드 형식으로 변환
+  const transformAnnouncement = (item) => {
+    // 날짜 형식 변환: ISO 8601 → "MM.DD"
+    const formatDate = (dateStr) => {
+      if (!dateStr) return '-';
+      try {
+        const date = new Date(dateStr);
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${month}.${day}`;
+      } catch {
+        return dateStr;
+      }
+    };
 
-  // 출처 필터링
+    // deadline 형식 변환: ISO 8601 → "~ MM.DD"
+    const formatDeadline = (dateStr) => {
+      if (!dateStr) return '-';
+      try {
+        const date = new Date(dateStr);
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `~ ${month}.${day}`;
+      } catch {
+        return dateStr;
+      }
+    };
+
+    // tags를 sub로 변환 (슬래시로 구분된 문자열)
+    const sub = item.tags && item.tags.length > 0 ? item.tags.join('/') : null;
+
+    return {
+      ...item,
+      postedAt: formatDate(item.posted_at),
+      deadline: formatDeadline(item.deadline),
+      sub, // tags를 sub로 변환
+    };
+  };
+
+  // 출처 필터링 (클라이언트 사이드, 백엔드 구현 전까지)
+  let filteredAnnouncements = announcements;
   if (selectedSources.size > 0) {
-    filteredAnnouncements = filteredAnnouncements.filter((item) => {
+    filteredAnnouncements = announcements.filter((item) => {
       const sources = item.source ?? [];
       const sourceNames = sources.map((s) => (typeof s === 'string' ? s : s.name));
       return sourceNames.some((name) => selectedSources.has(name));
     });
   }
 
-  // 페이지네이션 계산
-  const totalItems = filteredAnnouncements.length;
-  const totalPages = Math.ceil(totalItems / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedAnnouncements = filteredAnnouncements.slice(startIndex, endIndex);
+  // 피드 데이터 로드
+  const loadFeed = async (category = null, page = 1) => {
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const data = await getFeed({
+        category: category === '전체' || !category ? null : category,
+        page,
+        page_size: pageSize,
+      });
+
+      const transformedItems = data.items.map(transformAnnouncement);
+      setAnnouncements(transformedItems);
+      setTotalItems(data.meta.total);
+      setTotalPages(data.meta.total_pages);
+
+      // 출처 목록 업데이트
+      const allSourcesSet = new Set();
+      transformedItems.forEach((item) => {
+        const sources = item.source ?? [];
+        sources.forEach((s) => {
+          const name = typeof s === 'string' ? s : s.name;
+          if (name) allSourcesSet.add(name);
+        });
+      });
+    } catch (error) {
+      console.error('Failed to load feed:', error);
+      setFetchError('데이터를 불러오지 못했습니다.');
+      setAnnouncements([]);
+      setTotalItems(0);
+      setTotalPages(0);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 초기 로드 및 카테고리 변경 시 피드 로드
+  useEffect(() => {
+    const category = activeCategoryIndex === 0 ? null : activeCategory;
+    loadFeed(category, 1);
+    setCurrentPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCategoryIndex]);
 
   // 페이지 변경 핸들러
   const handlePageChange = (page) => {
     setCurrentPage(page);
+    const category = activeCategoryIndex === 0 ? null : activeCategory;
+    loadFeed(category, page);
     // 페이지 변경 시 스크롤을 맨 위로
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const response = await fetch('/dummy_data.json'); // 현재는 dummy_data를 긁어오지만 api 연결을 나중에 해야함.
-        if (!response.ok) {
-          throw new Error('Failed to fetch dummy data');
-        }
-        const data = await response.json();
-        const fetchedCategories = data.categories ?? [];
-        const uniqueCategories = fetchedCategories.filter(
-          (item, index) => fetchedCategories.indexOf(item) === index,
-        );
-        setCategories(uniqueCategories);
-        setAnnouncements(data.announcements ?? []);
-        setFetchError(null);
-      } catch (error) {
-        console.error(error);
-        setFetchError('데이터를 불러오지 못했습니다.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
-
-  useEffect(() => {
-    if (categories.length > 0) {
-      setActiveCategoryIndex(0);
-    }
-  }, [categories]);
-
-  // 카테고리 변경 시 첫 페이지로 이동
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [activeCategoryIndex]);
 
   // 모든 공지에서 고유한 출처 목록 추출
   const allSources = Array.from(
@@ -330,7 +378,7 @@ function MainPage() {
 
         <section className="mt-3 overflow-hidden rounded-[6px] border border-[#e6e9ef] bg-white shadow-sm">
           <AnnouncementList // 공지리스트를 컴포넌트로 밖으로 싹 뺐음. 각종 state 넘겨주면서.
-            announcements={paginatedAnnouncements}
+            announcements={filteredAnnouncements}
             favorites={favorites}
             onToggleFavorite={(item) => toggleFavorite(item.id)}
             onSelectAnnouncement={(item) => setSelectedAnnouncement(item)}
