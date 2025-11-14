@@ -10,7 +10,12 @@ const initialLiked = [
     title: 'NAVER AI/DATA 신입 공채 설명회',
     sub: 'AI/데이터/신입',
     category: '채용',
-    sources: ['경력개발센터'],
+    sources: [
+      {
+        name: '경력개발센터',
+        url: 'https://career.snu.ac.kr/notice',
+      },
+    ],
     postedAt: '10.20',
     deadline: '~ 10.31',
     liked: true,
@@ -20,7 +25,12 @@ const initialLiked = [
     title: '2025-2학기 SNU 멘토링 멘티 모집',
     sub: '멘토링/교육',
     category: '멘토링',
-    sources: ['학부대학'],
+    sources: [
+      {
+        name: '학부대학',
+        url: 'https://uaa.snu.ac.kr/board/notice',
+      },
+    ],
     postedAt: '10.21',
     deadline: '~ 11.05',
     liked: true,
@@ -30,7 +40,12 @@ const initialLiked = [
     title: '[서울시] 겨울방학 대학생 아르바이트 모집',
     sub: '관공서/알바/행정',
     category: '인턴',
-    sources: ['대외활동'],
+    sources: [
+      {
+        name: '대외활동',
+        url: 'https://uaa.snu.ac.kr/board/external',
+      },
+    ],
     postedAt: '10.18',
     deadline: '~ 10.29',
     liked: true,
@@ -40,7 +55,12 @@ const initialLiked = [
     title: '2025년도 기계제품설계 과제전 안내',
     sub: '설계/과제/연구',
     category: '연구',
-    sources: ['기계공학부'],
+    sources: [
+      {
+        name: '기계공학부',
+        url: 'https://me.snu.ac.kr/board/notice',
+      },
+    ],
     postedAt: '10.19',
     deadline: '~ 12.01',
     liked: true,
@@ -137,7 +157,14 @@ function MyPage() {
                 isFavorite={(item) => item.liked}
                 onToggleFavorite={(item) => toggleLikedNotice(item.id)}
                 onSelectAnnouncement={(item) => setSelectedAnnouncement(item)}
-                getSources={(item) => item.sources ?? []}
+                getSources={(item) => {
+                  const sources = item.sources ?? item.source ?? [];
+                  // 문자열 배열인 경우 객체 배열로 변환 (호환성 유지)
+                  if (sources.length > 0 && typeof sources[0] === 'string') {
+                    return sources.map((name) => ({ name, url: null }));
+                  }
+                  return sources;
+                }}
                 getDeadline={(item) => item.deadline ?? '-'}
                 rowClassName="grid grid-cols-1 gap-4 px-4 py-4 text-[15px] text-[#1e232e] transition-colors hover:bg-[#f8f9fb] sm:grid-cols-[3fr_1fr_1.5fr_1fr_1fr_0.5fr] sm:items-center"
                 listClassName="divide-y divide-[#e6e9ef]"
