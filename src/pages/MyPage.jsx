@@ -1,88 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import AnnouncementList from '../components/AnnouncementList';
 import HeartButton from '../components/HeartButton';
 import AnnouncementDetailModal from '../components/AnnouncementDetailModal';
-
-const initialLiked = [
-  {
-    id: 'liked-1',
-    title: 'NAVER AI/DATA 신입 공채 설명회',
-    sub: 'AI/데이터/신입',
-    category: '채용',
-    sources: [
-      {
-        name: '경력개발센터',
-        url: 'https://career.snu.ac.kr/notice',
-      },
-    ],
-    postedAt: '10.20',
-    deadline: '~ 10.31',
-    liked: true,
-  },
-  {
-    id: 'liked-2',
-    title: '2025-2학기 SNU 멘토링 멘티 모집',
-    sub: '멘토링/교육',
-    category: '멘토링',
-    sources: [
-      {
-        name: '학부대학',
-        url: 'https://uaa.snu.ac.kr/board/notice',
-      },
-    ],
-    postedAt: '10.21',
-    deadline: '~ 11.05',
-    liked: true,
-  },
-  {
-    id: 'liked-3',
-    title: '[서울시] 겨울방학 대학생 아르바이트 모집',
-    sub: '관공서/알바/행정',
-    category: '인턴',
-    sources: [
-      {
-        name: '대외활동',
-        url: 'https://uaa.snu.ac.kr/board/external',
-      },
-    ],
-    postedAt: '10.18',
-    deadline: '~ 10.29',
-    liked: true,
-  },
-  {
-    id: 'liked-4',
-    title: '2025년도 기계제품설계 과제전 안내',
-    sub: '설계/과제/연구',
-    category: '연구',
-    sources: [
-      {
-        name: '기계공학부',
-        url: 'https://me.snu.ac.kr/board/notice',
-      },
-    ],
-    postedAt: '10.19',
-    deadline: '~ 12.01',
-    liked: true,
-  },
-];
-
-const initialRecommended = [
-  {
-    id: 'rec-1',
-    title: '[서울시] AI 기술인재 육성 프로그램 참여자 모집',
-    tags: ['교육', '대외활동'],
-    deadline: '~ 11.10',
-    liked: false,
-  },
-  {
-    id: 'rec-2',
-    title: '[과기부] 2025 데이터 분석 캠프',
-    tags: ['채용', '대외활동'],
-    deadline: '~ 11.02',
-    liked: false,
-  },
-];
 
 function Switch({ checked, onChange }) {
   return (
@@ -114,12 +34,15 @@ const INTEREST_CATEGORIES = {
 
 function MyPage() {
   const [activeTab, setActiveTab] = useState('activities'); // 'activities' or 'profile'
-  const [likedNotices, setLikedNotices] = useState(initialLiked);
-  const [recommendations, setRecommendations] = useState(initialRecommended);
+  const [likedNotices, setLikedNotices] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
   const [recommendEmail, setRecommendEmail] = useState(true);
   const [deadlineAlert, setDeadlineAlert] = useState(false);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const pageSize = 20;
 
   // 프로필 수정 폼 상태
   const [profileForm, setProfileForm] = useState({
@@ -142,6 +65,46 @@ function MyPage() {
       prev.map((item) => (item.id === id ? { ...item, liked: !item.liked } : item)),
     );
   };
+
+  // 페이지네이션 계산 (관심 활동용)
+  const totalLikedItems = likedNotices.length;
+  const totalLikedPages = Math.ceil(totalLikedItems / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedLikedNotices = likedNotices.slice(startIndex, endIndex);
+
+  // 페이지 변경 핸들러
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    // 페이지 변경 시 스크롤을 맨 위로
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // 탭 변경 시 첫 페이지로 이동
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
+
+  // 더미데이터 로드
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const response = await fetch('/interested_dummy_data.json');
+        if (!response.ok) {
+          throw new Error('Failed to fetch interested dummy data');
+        }
+        const data = await response.json();
+        setLikedNotices(data.liked ?? []);
+        setRecommendations(data.recommended ?? []);
+      } catch (error) {
+        console.error('Error loading interested dummy data:', error);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">
@@ -203,7 +166,7 @@ function MyPage() {
                   </h2>
                 </div>
                 <AnnouncementList
-                  announcements={likedNotices}
+                  announcements={paginatedLikedNotices}
                   isFavorite={(item) => item.liked}
                   onToggleFavorite={(item) => toggleLikedNotice(item.id)}
                   onSelectAnnouncement={(item) => setSelectedAnnouncement(item)}
@@ -220,6 +183,14 @@ function MyPage() {
                   listClassName="divide-y divide-[#e6e9ef]"
                   messagePaddingClassName="px-4"
                   emptyMessage="관심 활동이 없습니다."
+                  showPagination={totalLikedPages > 1}
+                  pagination={{
+                    currentPage,
+                    totalPages: totalLikedPages,
+                    pageSize,
+                    total: totalLikedItems,
+                    onPageChange: handlePageChange,
+                  }}
                 />
               </section>
             ) : (

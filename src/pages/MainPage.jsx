@@ -2,54 +2,172 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AnnouncementList from '../components/AnnouncementList';
 import AnnouncementDetailModal from '../components/AnnouncementDetailModal';
+import { getFeed } from '../api/feed';
 
 function MainPage() {
   // 사용하고 있는 state 선언
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState([
+    '전체',
+    '대학생활',
+    '장학',
+    '연구',
+    '채용',
+    '대외활동',
+    '기타',
+    '추천',
+  ]);
   const [announcements, setAnnouncements] = useState([]);
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [favorites, setFavorites] = useState(() => new Set());
-  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null); //
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
+  const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
+  const [selectedSources, setSelectedSources] = useState(() => new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const pageSize = 20;
 
   const activeCategory = categories[activeCategoryIndex];
-  const filteredAnnouncements =
-    activeCategoryIndex === 0 || !activeCategory
-      ? announcements
-      : announcements.filter((item) => item.category === activeCategory);
 
-  useEffect(() => {
-    const loadData = async () => {
+  // 백엔드 응답을 프론트엔드 형식으로 변환
+  const transformAnnouncement = (item) => {
+    // 날짜 형식 변환: ISO 8601 → "MM.DD"
+    const formatDate = (dateStr) => {
+      if (!dateStr) return '-';
       try {
-        const response = await fetch('/dummy_data.json'); // 현재는 dummy_data를 긁어오지만 api 연결을 나중에 해야함.
-        if (!response.ok) {
-          throw new Error('Failed to fetch dummy data');
-        }
-        const data = await response.json();
-        const fetchedCategories = data.categories ?? [];
-        const uniqueCategories = fetchedCategories.filter(
-          (item, index) => fetchedCategories.indexOf(item) === index,
-        );
-        setCategories(uniqueCategories);
-        setAnnouncements(data.announcements ?? []);
-        setFetchError(null);
-      } catch (error) {
-        console.error(error);
-        setFetchError('데이터를 불러오지 못했습니다.');
-      } finally {
-        setIsLoading(false);
+        const date = new Date(dateStr);
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${month}.${day}`;
+      } catch {
+        return dateStr;
       }
     };
 
-    loadData();
-  }, []);
+    // deadline 형식 변환: ISO 8601 → "~ MM.DD"
+    const formatDeadline = (dateStr) => {
+      if (!dateStr) return '-';
+      try {
+        const date = new Date(dateStr);
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `~ ${month}.${day}`;
+      } catch {
+        return dateStr;
+      }
+    };
 
-  useEffect(() => {
-    if (categories.length > 0) {
-      setActiveCategoryIndex(0);
+    // tags를 sub로 변환 (슬래시로 구분된 문자열)
+    const sub = item.tags && item.tags.length > 0 ? item.tags.join('/') : null;
+
+    return {
+      ...item,
+      postedAt: formatDate(item.posted_at),
+      deadline: formatDeadline(item.deadline),
+      sub, // tags를 sub로 변환
+    };
+  };
+
+  // 출처 필터링 (클라이언트 사이드, 백엔드 구현 전까지)
+  let filteredAnnouncements = announcements;
+  if (selectedSources.size > 0) {
+    filteredAnnouncements = announcements.filter((item) => {
+      const sources = item.source ?? [];
+      const sourceNames = sources.map((s) => (typeof s === 'string' ? s : s.name));
+      return sourceNames.some((name) => selectedSources.has(name));
+    });
+  }
+
+  // 피드 데이터 로드
+  const loadFeed = async (category = null, page = 1) => {
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const data = await getFeed({
+        category: category === '전체' || !category ? null : category,
+        page,
+        page_size: pageSize,
+      });
+
+      const transformedItems = data.items.map(transformAnnouncement);
+      setAnnouncements(transformedItems);
+      setTotalItems(data.meta.total);
+      setTotalPages(data.meta.total_pages);
+
+      // 출처 목록 업데이트
+      const allSourcesSet = new Set();
+      transformedItems.forEach((item) => {
+        const sources = item.source ?? [];
+        sources.forEach((s) => {
+          const name = typeof s === 'string' ? s : s.name;
+          if (name) allSourcesSet.add(name);
+        });
+      });
+    } catch (error) {
+      console.error('Failed to load feed:', error);
+      setFetchError('데이터를 불러오지 못했습니다.');
+      setAnnouncements([]);
+      setTotalItems(0);
+      setTotalPages(0);
+    } finally {
+      setIsLoading(false);
     }
-  }, [categories]);
+  };
+
+  // 초기 로드 및 카테고리 변경 시 피드 로드
+  useEffect(() => {
+    const category = activeCategoryIndex === 0 ? null : activeCategory;
+    loadFeed(category, 1);
+    setCurrentPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCategoryIndex]);
+
+  // 페이지 변경 핸들러
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    const category = activeCategoryIndex === 0 ? null : activeCategory;
+    loadFeed(category, page);
+    // 페이지 변경 시 스크롤을 맨 위로
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // 모든 공지에서 고유한 출처 목록 추출
+  const allSources = Array.from(
+    new Set(
+      announcements.flatMap((announcement) => {
+        const sources = announcement.source ?? [];
+        return sources.map((s) => (typeof s === 'string' ? s : s.name));
+      }),
+    ),
+  ).sort();
+
+  // 출처 선택/해제 토글
+  const toggleSource = (sourceName) => {
+    setSelectedSources((prev) => {
+      const next = new Set(prev);
+      if (next.has(sourceName)) {
+        next.delete(sourceName);
+      } else {
+        next.add(sourceName);
+      }
+      return next;
+    });
+    // 출처 필터 변경 시 첫 페이지로 이동
+    setCurrentPage(1);
+  };
+
+  // 드롭다운 버튼 텍스트 결정
+  const getSourceButtonText = () => {
+    if (selectedSources.size === 0) {
+      return '선택하세요';
+    }
+    if (selectedSources.size === 1) {
+      return Array.from(selectedSources)[0];
+    }
+    return `${selectedSources.size}개 선택됨`;
+  };
 
   // 누르면 즐겨찾기 state에 추가, 누르면 즐겨찾기 삭제하는 함수
   const toggleFavorite = (id) => {
@@ -63,6 +181,19 @@ function MainPage() {
       return next;
     });
   };
+
+  // 드롭다운 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setIsSourceDropdownOpen(false);
+    };
+    if (isSourceDropdownOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => {
+        document.removeEventListener('click', handleClickOutside);
+      };
+    }
+  }, [isSourceDropdownOpen]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -144,22 +275,69 @@ function MainPage() {
                 className="w-full bg-transparent text-[15px] font-medium text-[#1e232e] outline-none placeholder:text-[#9aa3b2]"
               />
             </div>
-            <div>
+            <div className="relative">
               <label className="mb-1 block text-[13px] font-medium text-[#5d6676]">
                 공지 출처 (포스팅된 곳)
               </label>
               <button
                 type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsSourceDropdownOpen(!isSourceDropdownOpen);
+                }}
                 className="flex w-full items-center justify-between rounded-[6px] border border-[#e6e9ef] px-3 py-2 text-left text-[14px] font-medium text-[#1e232e] transition-colors hover:bg-[#f8f9fb]"
+                aria-expanded={isSourceDropdownOpen}
+                aria-haspopup="listbox"
               >
-                선택하세요
-                <svg viewBox="0 0 20 20" aria-hidden="true" className="h-5 w-5 text-[#7a8497]">
+                <span className={selectedSources.size === 0 ? 'text-[#9aa3b2]' : ''}>
+                  {getSourceButtonText()}
+                </span>
+                <svg
+                  viewBox="0 0 20 20"
+                  aria-hidden="true"
+                  className={`h-5 w-5 text-[#7a8497] transition-transform ${
+                    isSourceDropdownOpen ? 'rotate-90' : ''
+                  }`}
+                >
                   <path
                     d="M7.5 5.75a.75.75 0 0 1 1.28-.53l3 3a.75.75 0 0 1 0 1.06l-3 3A.75.75 0 0 1 7.5 11.5l2.47-2.47L7.5 6.56A.75.75 0 0 1 7.5 5.75Z"
                     fill="currentColor"
                   />
                 </svg>
               </button>
+              {isSourceDropdownOpen && (
+                <div
+                  className="absolute z-10 mt-1 w-full rounded-[6px] border border-[#e6e9ef] bg-white shadow-lg"
+                  role="listbox"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="max-h-[200px] overflow-y-auto p-2">
+                    {allSources.length > 0 ? (
+                      allSources.map((sourceName) => {
+                        const isChecked = selectedSources.has(sourceName);
+                        return (
+                          <label
+                            key={sourceName}
+                            className="flex cursor-pointer items-center gap-2 rounded-[4px] px-2 py-1.5 text-[14px] text-[#1e232e] transition-colors hover:bg-[#f8f9fb]"
+                            role="option"
+                            aria-selected={isChecked}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => toggleSource(sourceName)}
+                              className="h-4 w-4 cursor-pointer rounded border-[#d3d8e0] text-[#0b3aa2] focus:ring-2 focus:ring-[#0b3aa2] focus:ring-offset-0"
+                            />
+                            <span className="flex-1">{sourceName}</span>
+                          </label>
+                        );
+                      })
+                    ) : (
+                      <div className="px-2 py-1.5 text-[14px] text-[#9aa3b2]">출처가 없습니다</div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div className="mt-3 flex justify-end gap-2">
@@ -180,7 +358,9 @@ function MainPage() {
 
         <div className="mt-6 flex items-center justify-between text-[14px] text-[#5d6676]">
           <span>
-            {isLoading ? '검색 결과 불러오는 중...' : `검색 결과 ${filteredAnnouncements.length}개`}
+            {isLoading
+              ? '검색 결과 불러오는 중...'
+              : `검색 결과 ${totalItems}개${totalPages > 1 ? ` (${currentPage}/${totalPages}페이지)` : ''}`}
           </span>
         </div>
 
@@ -205,6 +385,14 @@ function MainPage() {
             loading={isLoading}
             error={fetchError}
             emptyMessage="조건에 맞는 공지가 없습니다."
+            showPagination={totalPages > 1}
+            pagination={{
+              currentPage,
+              totalPages,
+              pageSize,
+              total: totalItems,
+              onPageChange: handlePageChange,
+            }}
           />
         </section>
       </div>
