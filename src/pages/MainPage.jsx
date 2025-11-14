@@ -11,13 +11,42 @@ function MainPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [favorites, setFavorites] = useState(() => new Set());
-  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null); //
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
+  const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
+  const [selectedSources, setSelectedSources] = useState(() => new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
 
   const activeCategory = categories[activeCategoryIndex];
-  const filteredAnnouncements =
+
+  // 카테고리 및 출처 필터링
+  let filteredAnnouncements =
     activeCategoryIndex === 0 || !activeCategory
       ? announcements
       : announcements.filter((item) => item.category === activeCategory);
+
+  // 출처 필터링
+  if (selectedSources.size > 0) {
+    filteredAnnouncements = filteredAnnouncements.filter((item) => {
+      const sources = item.source ?? [];
+      const sourceNames = sources.map((s) => (typeof s === 'string' ? s : s.name));
+      return sourceNames.some((name) => selectedSources.has(name));
+    });
+  }
+
+  // 페이지네이션 계산
+  const totalItems = filteredAnnouncements.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedAnnouncements = filteredAnnouncements.slice(startIndex, endIndex);
+
+  // 페이지 변경 핸들러
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    // 페이지 변경 시 스크롤을 맨 위로
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -51,6 +80,47 @@ function MainPage() {
     }
   }, [categories]);
 
+  // 카테고리 변경 시 첫 페이지로 이동
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategoryIndex]);
+
+  // 모든 공지에서 고유한 출처 목록 추출
+  const allSources = Array.from(
+    new Set(
+      announcements.flatMap((announcement) => {
+        const sources = announcement.source ?? [];
+        return sources.map((s) => (typeof s === 'string' ? s : s.name));
+      }),
+    ),
+  ).sort();
+
+  // 출처 선택/해제 토글
+  const toggleSource = (sourceName) => {
+    setSelectedSources((prev) => {
+      const next = new Set(prev);
+      if (next.has(sourceName)) {
+        next.delete(sourceName);
+      } else {
+        next.add(sourceName);
+      }
+      return next;
+    });
+    // 출처 필터 변경 시 첫 페이지로 이동
+    setCurrentPage(1);
+  };
+
+  // 드롭다운 버튼 텍스트 결정
+  const getSourceButtonText = () => {
+    if (selectedSources.size === 0) {
+      return '선택하세요';
+    }
+    if (selectedSources.size === 1) {
+      return Array.from(selectedSources)[0];
+    }
+    return `${selectedSources.size}개 선택됨`;
+  };
+
   // 누르면 즐겨찾기 state에 추가, 누르면 즐겨찾기 삭제하는 함수
   const toggleFavorite = (id) => {
     setFavorites((prev) => {
@@ -63,6 +133,19 @@ function MainPage() {
       return next;
     });
   };
+
+  // 드롭다운 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setIsSourceDropdownOpen(false);
+    };
+    if (isSourceDropdownOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => {
+        document.removeEventListener('click', handleClickOutside);
+      };
+    }
+  }, [isSourceDropdownOpen]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -144,22 +227,69 @@ function MainPage() {
                 className="w-full bg-transparent text-[15px] font-medium text-[#1e232e] outline-none placeholder:text-[#9aa3b2]"
               />
             </div>
-            <div>
+            <div className="relative">
               <label className="mb-1 block text-[13px] font-medium text-[#5d6676]">
                 공지 출처 (포스팅된 곳)
               </label>
               <button
                 type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsSourceDropdownOpen(!isSourceDropdownOpen);
+                }}
                 className="flex w-full items-center justify-between rounded-[6px] border border-[#e6e9ef] px-3 py-2 text-left text-[14px] font-medium text-[#1e232e] transition-colors hover:bg-[#f8f9fb]"
+                aria-expanded={isSourceDropdownOpen}
+                aria-haspopup="listbox"
               >
-                선택하세요
-                <svg viewBox="0 0 20 20" aria-hidden="true" className="h-5 w-5 text-[#7a8497]">
+                <span className={selectedSources.size === 0 ? 'text-[#9aa3b2]' : ''}>
+                  {getSourceButtonText()}
+                </span>
+                <svg
+                  viewBox="0 0 20 20"
+                  aria-hidden="true"
+                  className={`h-5 w-5 text-[#7a8497] transition-transform ${
+                    isSourceDropdownOpen ? 'rotate-90' : ''
+                  }`}
+                >
                   <path
                     d="M7.5 5.75a.75.75 0 0 1 1.28-.53l3 3a.75.75 0 0 1 0 1.06l-3 3A.75.75 0 0 1 7.5 11.5l2.47-2.47L7.5 6.56A.75.75 0 0 1 7.5 5.75Z"
                     fill="currentColor"
                   />
                 </svg>
               </button>
+              {isSourceDropdownOpen && (
+                <div
+                  className="absolute z-10 mt-1 w-full rounded-[6px] border border-[#e6e9ef] bg-white shadow-lg"
+                  role="listbox"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="max-h-[200px] overflow-y-auto p-2">
+                    {allSources.length > 0 ? (
+                      allSources.map((sourceName) => {
+                        const isChecked = selectedSources.has(sourceName);
+                        return (
+                          <label
+                            key={sourceName}
+                            className="flex cursor-pointer items-center gap-2 rounded-[4px] px-2 py-1.5 text-[14px] text-[#1e232e] transition-colors hover:bg-[#f8f9fb]"
+                            role="option"
+                            aria-selected={isChecked}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => toggleSource(sourceName)}
+                              className="h-4 w-4 cursor-pointer rounded border-[#d3d8e0] text-[#0b3aa2] focus:ring-2 focus:ring-[#0b3aa2] focus:ring-offset-0"
+                            />
+                            <span className="flex-1">{sourceName}</span>
+                          </label>
+                        );
+                      })
+                    ) : (
+                      <div className="px-2 py-1.5 text-[14px] text-[#9aa3b2]">출처가 없습니다</div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div className="mt-3 flex justify-end gap-2">
@@ -180,7 +310,9 @@ function MainPage() {
 
         <div className="mt-6 flex items-center justify-between text-[14px] text-[#5d6676]">
           <span>
-            {isLoading ? '검색 결과 불러오는 중...' : `검색 결과 ${filteredAnnouncements.length}개`}
+            {isLoading
+              ? '검색 결과 불러오는 중...'
+              : `검색 결과 ${totalItems}개${totalPages > 1 ? ` (${currentPage}/${totalPages}페이지)` : ''}`}
           </span>
         </div>
 
@@ -198,13 +330,21 @@ function MainPage() {
 
         <section className="mt-3 overflow-hidden rounded-[6px] border border-[#e6e9ef] bg-white shadow-sm">
           <AnnouncementList // 공지리스트를 컴포넌트로 밖으로 싹 뺐음. 각종 state 넘겨주면서.
-            announcements={filteredAnnouncements}
+            announcements={paginatedAnnouncements}
             favorites={favorites}
             onToggleFavorite={(item) => toggleFavorite(item.id)}
             onSelectAnnouncement={(item) => setSelectedAnnouncement(item)}
             loading={isLoading}
             error={fetchError}
             emptyMessage="조건에 맞는 공지가 없습니다."
+            showPagination={totalPages > 1}
+            pagination={{
+              currentPage,
+              totalPages,
+              pageSize,
+              total: totalItems,
+              onPageChange: handlePageChange,
+            }}
           />
         </section>
       </div>
