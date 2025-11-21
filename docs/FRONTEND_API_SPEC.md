@@ -690,15 +690,34 @@
 
 다음 API들은 백엔드에 아직 구현되지 않았으므로 구현이 필요합니다:
 
-1. **GET /likes/{user_id}** - 사용자의 좋아요한 포스트 목록 조회
-2. **GET /users/{user_id}** - 사용자 정보 조회
-3. **PUT /users/{user_id}** - 사용자 프로필 수정
-4. **GET /users/{user_id}/notifications** - 사용자 알림 설정 조회
-5. **PUT /users/{user_id}/notifications** - 사용자 알림 설정 업데이트
-6. **GET /feed**에 `category` 파라미터 추가 - **권장: DB 쿼리 레벨에서 필터링**
-7. **GET /search**에 `category` 파라미터 추가 - **카테고리 안에서 검색 기능을 위해 필요**
-8. **GET /search**에 `source` 파라미터 추가 - **공지 출처 필터링 기능을 위해 필요 (배열로 여러 출처 선택 가능)**
+1. ~~**GET /likes/{user_id}** - 사용자의 좋아요한 포스트 목록 조회~~ ✅ **구현 완료** (실제로는 `GET /users/{user_id}/likes`로 구현됨)
+2. ~~**GET /users/{user_id}** - 사용자 정보 조회~~ ✅ **구현 완료**
+3. ~~**PUT /users/{user_id}** - 사용자 프로필 수정~~ ✅ **구현 완료**
+4. ~~**GET /users/{user_id}/notifications** - 사용자 알림 설정 조회~~ ✅ **구현 완료**
+5. ~~**PUT /users/{user_id}/notifications** - 사용자 알림 설정 업데이트~~ ✅ **구현 완료**
+6. ~~**GET /feed**에 `category` 파라미터 추가~~ ✅ **구현 완료**
+7. ~~**GET /search**에 `category` 파라미터 추가~~ ✅ **구현 완료**
+8. ~~**GET /search**에 `source` 파라미터 추가~~ ✅ **구현 완료**
 9. **GET /feed/reco-user** - 사용자 프로필 기반 추천 (구현 보류, `user_id`만 필요, 나머지는 백엔드에서 사용자 정보 조회하여 처리)
+
+---
+
+## 구현 완료된 API 목록
+
+다음 API들은 백엔드와 프론트엔드 모두 구현되어 연결되었습니다:
+
+1. ✅ **GET /feed** - 피드 조회 (category, page, page_size 파라미터 지원)
+2. ✅ **GET /feed/reco-likes** - 좋아요 기반 AI 추천
+3. ✅ **GET /search** - 하이브리드 키워드/의미 검색 (category, source, q 파라미터 지원)
+4. ✅ **GET /posts/{post_id}** - 포스트 상세 정보 조회
+5. ✅ **POST /likes** - 포스트 좋아요 추가
+6. ✅ **DELETE /likes/{user_id}/{post_id}** - 포스트 좋아요 취소
+7. ✅ **GET /users/{user_id}** - 사용자 프로필 조회
+8. ✅ **PUT /users/{user_id}** - 사용자 프로필 수정
+9. ✅ **GET /users/{user_id}/likes** - 사용자 좋아요 목록 조회 (페이지네이션 지원)
+10. ✅ **GET /users/{user_id}/notifications** - 사용자 알림 설정 조회
+11. ✅ **PUT /users/{user_id}/notifications** - 사용자 알림 설정 업데이트
+12. ✅ **POST /chat** - 챗봇 질문/답변 (department, grade 파라미터 지원)
 
 ---
 
