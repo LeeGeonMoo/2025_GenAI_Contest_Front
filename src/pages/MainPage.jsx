@@ -4,6 +4,7 @@ import AnnouncementList from '../components/AnnouncementList';
 import AnnouncementDetailModal from '../components/AnnouncementDetailModal';
 import { getFeed } from '../api/feed';
 import { likePost, unlikePost } from '../api/likes';
+import { getUserLikes } from '../api/users';
 import { CURRENT_USER_ID } from '../config/constants';
 import { transformAnnouncement } from '../utils/transformAnnouncement';
 
@@ -60,6 +61,9 @@ function MainPage() {
       setTotalItems(data.meta.total);
       setTotalPages(data.meta.total_pages);
 
+      // 현재 페이지의 항목들에 대한 좋아요 상태 확인
+      updateFavoritesForCurrentPage(transformedItems);
+
       // 출처 목록 업데이트
       const allSourcesSet = new Set();
       transformedItems.forEach((item) => {
@@ -81,6 +85,53 @@ function MainPage() {
   };
 
   // 초기 로드 및 카테고리 변경 시 피드 로드
+  // 현재 페이지의 feed 항목들에 대한 좋아요 상태 확인
+  const updateFavoritesForCurrentPage = async (feedItems) => {
+    if (feedItems.length === 0) return;
+
+    try {
+      // 현재 페이지의 항목 ID들
+      const currentPageIds = feedItems.map((item) => item.id);
+
+      // 좋아요 목록에서 현재 페이지의 항목들만 확인
+      // 좋아요 목록이 많을 수 있으므로, 현재 페이지 항목들만 필터링
+      const allLikedIds = new Set();
+      let page = 1;
+      const pageSize = 100;
+      let hasMore = true;
+      let foundAll = false;
+
+      while (hasMore && !foundAll) {
+        const data = await getUserLikes(CURRENT_USER_ID, { page, page_size: pageSize });
+
+        // 현재 페이지의 항목들 중 좋아요한 것만 추가
+        data.items.forEach((item) => {
+          if (currentPageIds.includes(item.id)) {
+            allLikedIds.add(item.id);
+          }
+        });
+
+        // 현재 페이지의 모든 항목을 찾았는지 확인
+        foundAll = currentPageIds.every(
+          (id) => allLikedIds.has(id) || !data.items.some((item) => item.id === id),
+        );
+
+        // 다음 페이지가 있는지 확인
+        hasMore = page < data.meta.total_pages;
+        page += 1;
+      }
+
+      // 기존 favorites에 현재 페이지 결과 병합
+      setFavorites((prev) => {
+        const next = new Set(prev);
+        allLikedIds.forEach((id) => next.add(id));
+        return next;
+      });
+    } catch (error) {
+      console.error('Error updating favorites:', error);
+    }
+  };
+
   useEffect(() => {
     const category = activeCategoryIndex === 0 ? null : activeCategory;
     loadFeed(category, 1);
