@@ -3,7 +3,13 @@ import { Link } from 'react-router-dom';
 import AnnouncementList from '../components/AnnouncementList';
 import HeartButton from '../components/HeartButton';
 import AnnouncementDetailModal from '../components/AnnouncementDetailModal';
-import { getUser, updateUser, getUserLikes } from '../api/users';
+import {
+  getUser,
+  updateUser,
+  getUserLikes,
+  getNotifications,
+  updateNotifications,
+} from '../api/users';
 import { likePost, unlikePost } from '../api/likes';
 import { CURRENT_USER_ID } from '../config/constants';
 import { transformAnnouncement } from '../utils/transformAnnouncement';
@@ -42,8 +48,9 @@ function MyPage() {
   const [activeTab, setActiveTab] = useState('activities'); // 'activities' or 'profile'
   const [likedNotices, setLikedNotices] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
-  const [recommendEmail, setRecommendEmail] = useState(true);
-  const [deadlineAlert, setDeadlineAlert] = useState(false);
+  const [recommendEmail, setRecommendEmail] = useState(null); // null로 초기화하여 로딩 완료 전까지 애니메이션 방지
+  const [deadlineAlert, setDeadlineAlert] = useState(null);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState(null);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -187,6 +194,25 @@ function MyPage() {
     };
 
     loadProfile();
+  }, []);
+
+  // 알림 설정 조회
+  useEffect(() => {
+    const loadNotifications = async () => {
+      setIsLoadingNotifications(true);
+      try {
+        const data = await getNotifications(CURRENT_USER_ID);
+        setRecommendEmail(data.recommend_email ?? true);
+        setDeadlineAlert(data.deadline_alert ?? false);
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+        // 에러 발생 시 기본값 유지
+      } finally {
+        setIsLoadingNotifications(false);
+      }
+    };
+
+    loadNotifications();
   }, []);
 
   // AI 추천 더미데이터 로드 (백엔드 API 구현 전까지)
@@ -525,7 +551,26 @@ function MyPage() {
                         관심 활동과 맞는 새 공지를 메일로 받아요
                       </p>
                     </div>
-                    <Switch checked={recommendEmail} onChange={setRecommendEmail} />
+                    {recommendEmail !== null ? (
+                      <Switch
+                        checked={recommendEmail}
+                        onChange={async (newValue) => {
+                          const previousValue = recommendEmail;
+                          setRecommendEmail(newValue);
+                          try {
+                            await updateNotifications(CURRENT_USER_ID, {
+                              recommend_email: newValue,
+                            });
+                          } catch (error) {
+                            console.error('Error updating notifications:', error);
+                            // 에러 발생 시 롤백
+                            setRecommendEmail(previousValue);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="h-[26px] w-[46px] animate-pulse rounded-full bg-[#cfd5df]" />
+                    )}
                   </div>
                 </div>
                 <div className="border-b border-[#e6e9ef] py-3 last:border-b-0">
@@ -536,7 +581,26 @@ function MyPage() {
                         관심 공지 마감 3일 전, 1일 전 알림
                       </p>
                     </div>
-                    <Switch checked={deadlineAlert} onChange={setDeadlineAlert} />
+                    {deadlineAlert !== null ? (
+                      <Switch
+                        checked={deadlineAlert}
+                        onChange={async (newValue) => {
+                          const previousValue = deadlineAlert;
+                          setDeadlineAlert(newValue);
+                          try {
+                            await updateNotifications(CURRENT_USER_ID, {
+                              deadline_alert: newValue,
+                            });
+                          } catch (error) {
+                            console.error('Error updating notifications:', error);
+                            // 에러 발생 시 롤백
+                            setDeadlineAlert(previousValue);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="h-[26px] w-[46px] animate-pulse rounded-full bg-[#cfd5df]" />
+                    )}
                   </div>
                 </div>
               </div>

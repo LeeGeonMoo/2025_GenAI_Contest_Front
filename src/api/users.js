@@ -42,3 +42,26 @@ export const getUserLikes = async (user_id, { page = 1, page_size = 20 } = {}) =
   });
   return response.data;
 };
+
+/**
+ * 사용자 알림 설정 조회
+ * @param {string} user_id - 사용자 ID
+ * @returns {Promise} API 응답
+ */
+export const getNotifications = async (user_id) => {
+  const response = await apiClient.get(`/users/${user_id}/notifications`);
+  return response.data;
+};
+
+/**
+ * 사용자 알림 설정 업데이트
+ * @param {string} user_id - 사용자 ID
+ * @param {Object} data - 알림 설정 데이터
+ * @param {boolean} [data.recommend_email] - "오늘의 추천!" 알림 설정
+ * @param {boolean} [data.deadline_alert] - "마감 기한 Alert" 알림 설정
+ * @returns {Promise} API 응답
+ */
+export const updateNotifications = async (user_id, data) => {
+  const response = await apiClient.put(`/users/${user_id}/notifications`, data);
+  return response.data;
+};
