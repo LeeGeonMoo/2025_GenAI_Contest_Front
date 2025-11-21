@@ -19,3 +19,20 @@ export const getFeed = async ({ category = null, page = 1, page_size = 20 } = {}
   const response = await apiClient.get('/feed', { params });
   return response.data;
 };
+
+/**
+ * 좋아요 기반 추천 피드 조회
+ * @param {Object} params - 쿼리 파라미터
+ * @param {string} params.user_id - 사용자 ID (required)
+ * @param {number} [params.limit=10] - 추천 개수
+ * @returns {Promise} API 응답
+ */
+export const getRecoLikes = async ({ user_id, limit = 10 } = {}) => {
+  const params = {
+    user_id,
+    limit,
+  };
+
+  const response = await apiClient.get('/feed/reco-likes', { params });
+  return response.data;
+};
