@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import AnnouncementList from '../components/AnnouncementList';
 import AnnouncementDetailModal from '../components/AnnouncementDetailModal';
 import { getFeed } from '../api/feed';
+import { search as searchAPI } from '../api/search';
 import { likePost, unlikePost } from '../api/likes';
 import { getUserLikes } from '../api/users';
 import { CURRENT_USER_ID } from '../config/constants';
@@ -31,19 +32,144 @@ function MainPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchMode, setIsSearchMode] = useState(false);
+  const [allAvailableSources, setAllAvailableSources] = useState([]); // 전체 출처 목록
   const pageSize = 20;
 
   const activeCategory = categories[activeCategoryIndex];
 
-  // 출처 필터링 (클라이언트 사이드, 백엔드 구현 전까지)
-  let filteredAnnouncements = announcements;
-  if (selectedSources.size > 0) {
-    filteredAnnouncements = announcements.filter((item) => {
-      const sources = item.source ?? [];
-      const sourceNames = sources.map((s) => (typeof s === 'string' ? s : s.name));
-      return sourceNames.some((name) => selectedSources.has(name));
-    });
-  }
+  // 클라이언트 사이드 필터링 제거 - 검색 모드일 때만 백엔드에서 source 필터링 수행
+  // 피드 모드에서는 source 필터링 없음
+
+  // 검색 실행 함수
+  const handleSearch = async () => {
+    // 키워드나 소스 중 하나라도 선택되어 있으면 검색 모드
+    const hasKeyword = searchQuery.trim().length > 0;
+    const hasSource = selectedSources.size > 0;
+
+    if (!hasKeyword && !hasSource) {
+      // 둘 다 없으면 피드로 돌아가기
+      setIsSearchMode(false);
+      setCurrentPage(1);
+      const category = activeCategoryIndex === 0 ? null : activeCategory;
+      loadFeed(category, 1);
+      return;
+    }
+
+    setIsSearchMode(true);
+    setIsLoading(true);
+    setFetchError(null);
+    setCurrentPage(1);
+
+    try {
+      const category = activeCategoryIndex === 0 ? null : activeCategory;
+      const sourceArray = selectedSources.size > 0 ? Array.from(selectedSources) : null;
+
+      const data = await searchAPI({
+        q: hasKeyword ? searchQuery.trim() : null,
+        category: category === '전체' || !category ? null : category,
+        source: sourceArray,
+        page: 1,
+        page_size: pageSize,
+      });
+
+      const transformedItems = data.items.map(transformAnnouncement);
+      setAnnouncements(transformedItems);
+      setTotalItems(data.meta.total);
+      setTotalPages(data.meta.total_pages);
+
+      // 검색 결과에 대한 좋아요 상태 확인
+      updateFavoritesForCurrentPage(transformedItems);
+    } catch (error) {
+      console.error('Failed to search:', error);
+      setFetchError('검색 중 오류가 발생했습니다.');
+      setAnnouncements([]);
+      setTotalItems(0);
+      setTotalPages(0);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 검색 페이지 변경
+  const handleSearchPageChange = async (page) => {
+    setIsLoading(true);
+    setFetchError(null);
+    setCurrentPage(page);
+
+    try {
+      const category = activeCategoryIndex === 0 ? null : activeCategory;
+      const sourceArray = selectedSources.size > 0 ? Array.from(selectedSources) : null;
+      const hasKeyword = searchQuery.trim().length > 0;
+
+      const data = await searchAPI({
+        q: hasKeyword ? searchQuery.trim() : null,
+        category: category === '전체' || !category ? null : category,
+        source: sourceArray,
+        page,
+        page_size: pageSize,
+      });
+
+      const transformedItems = data.items.map(transformAnnouncement);
+      setAnnouncements(transformedItems);
+      setTotalItems(data.meta.total);
+      setTotalPages(data.meta.total_pages);
+
+      // 검색 결과에 대한 좋아요 상태 확인
+      updateFavoritesForCurrentPage(transformedItems);
+    } catch (error) {
+      console.error('Failed to search:', error);
+      setFetchError('검색 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // 전체 출처 목록 수집 함수 (피드에서 여러 페이지를 순회하여 모든 출처 수집)
+  const collectAllSources = async (category = null) => {
+    try {
+      const allSourcesSet = new Set();
+      let page = 1;
+      let hasMore = true;
+      const maxPages = 10; // 최대 10페이지까지만 수집 (성능 고려)
+
+      while (hasMore && page <= maxPages) {
+        const data = await getFeed({
+          category: category === '전체' || !category ? null : category,
+          page,
+          page_size: 100, // 출처 수집을 위해 큰 페이지 사이즈 사용
+        });
+
+        data.items.forEach((item) => {
+          const transformedItem = transformAnnouncement(item);
+          const sources = transformedItem.source ?? [];
+          sources.forEach((s) => {
+            const name = typeof s === 'string' ? s : s.name;
+            if (name) allSourcesSet.add(name);
+          });
+        });
+
+        hasMore = page < data.meta.total_pages;
+        page += 1;
+      }
+
+      setAllAvailableSources(Array.from(allSourcesSet).sort());
+    } catch (error) {
+      console.error('Failed to collect all sources:', error);
+      // 실패해도 현재 페이지의 출처라도 표시
+      const currentSources = Array.from(
+        new Set(
+          announcements.flatMap((announcement) => {
+            const sources = announcement.source ?? [];
+            return sources.map((s) => (typeof s === 'string' ? s : s.name));
+          }),
+        ),
+      ).sort();
+      setAllAvailableSources(currentSources);
+    }
+  };
 
   // 피드 데이터 로드
   const loadFeed = async (category = null, page = 1) => {
@@ -64,15 +190,8 @@ function MainPage() {
       // 현재 페이지의 항목들에 대한 좋아요 상태 확인
       updateFavoritesForCurrentPage(transformedItems);
 
-      // 출처 목록 업데이트
-      const allSourcesSet = new Set();
-      transformedItems.forEach((item) => {
-        const sources = item.source ?? [];
-        sources.forEach((s) => {
-          const name = typeof s === 'string' ? s : s.name;
-          if (name) allSourcesSet.add(name);
-        });
-      });
+      // 전체 출처 목록 수집 (여러 페이지에서 수집)
+      await collectAllSources(category);
     } catch (error) {
       console.error('Failed to load feed:', error);
       setFetchError('데이터를 불러오지 못했습니다.');
@@ -134,29 +253,40 @@ function MainPage() {
 
   useEffect(() => {
     const category = activeCategoryIndex === 0 ? null : activeCategory;
-    loadFeed(category, 1);
-    setCurrentPage(1);
+
+    // 검색 모드일 때 (키워드나 소스가 선택되어 있을 때)
+    const hasKeyword = searchQuery.trim().length > 0;
+    const hasSource = selectedSources.size > 0;
+
+    if (isSearchMode && (hasKeyword || hasSource)) {
+      // 카테고리 변경 시 검색 다시 실행 (키워드, 소스 유지)
+      handleSearch();
+    } else {
+      // 검색 모드가 아니면 피드 로드
+      loadFeed(category, 1);
+      setCurrentPage(1);
+    }
+
+    // 카테고리 변경 시 전체 출처 목록도 업데이트
+    collectAllSources(category);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCategoryIndex]);
 
   // 페이지 변경 핸들러
   const handlePageChange = (page) => {
-    setCurrentPage(page);
-    const category = activeCategoryIndex === 0 ? null : activeCategory;
-    loadFeed(category, page);
-    // 페이지 변경 시 스크롤을 맨 위로
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (isSearchMode) {
+      handleSearchPageChange(page);
+    } else {
+      setCurrentPage(page);
+      const category = activeCategoryIndex === 0 ? null : activeCategory;
+      loadFeed(category, page);
+      // 페이지 변경 시 스크롤을 맨 위로
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
-  // 모든 공지에서 고유한 출처 목록 추출
-  const allSources = Array.from(
-    new Set(
-      announcements.flatMap((announcement) => {
-        const sources = announcement.source ?? [];
-        return sources.map((s) => (typeof s === 'string' ? s : s.name));
-      }),
-    ),
-  ).sort();
+  // 드롭다운에 표시할 출처 목록 (전체 출처 목록 사용)
+  const allSources = allAvailableSources.length > 0 ? allAvailableSources : [];
 
   // 출처 선택/해제 토글
   const toggleSource = (sourceName) => {
@@ -172,6 +302,8 @@ function MainPage() {
     // 출처 필터 변경 시 첫 페이지로 이동
     setCurrentPage(1);
   };
+
+  // 출처 필터 변경 시 자동 검색 제거 - 항상 '검색' 버튼을 눌러야만 검색됨
 
   // 드롭다운 버튼 텍스트 결정
   const getSourceButtonText = () => {
@@ -302,6 +434,13 @@ function MainPage() {
               <input
                 type="search"
                 placeholder="공고명, 키워드 검색"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch();
+                  }
+                }}
                 className="w-full bg-transparent text-[15px] font-medium text-[#1e232e] outline-none placeholder:text-[#9aa3b2]"
               />
             </div>
@@ -373,13 +512,24 @@ function MainPage() {
           <div className="mt-3 flex justify-end gap-2">
             <button
               type="button"
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedSources(new Set());
+                setIsSearchMode(false);
+                setCurrentPage(1);
+                setIsSourceDropdownOpen(false);
+                const category = activeCategoryIndex === 0 ? null : activeCategory;
+                loadFeed(category, 1);
+              }}
               className="rounded-[6px] border border-[#e6e9ef] px-[12px] py-[7px] text-[14px] font-medium text-[#1e232e] transition-colors hover:bg-[#f8f9fb]"
             >
               초기화
             </button>
             <button
               type="button"
-              className="rounded-[6px] border border-[#0b3aa2] bg-[#0b3aa2] px-[12px] py-[7px] text-[14px] font-medium text-white transition-colors hover:brightness-95"
+              onClick={handleSearch}
+              disabled={isLoading}
+              className="rounded-[6px] border border-[#0b3aa2] bg-[#0b3aa2] px-[12px] py-[7px] text-[14px] font-medium text-white transition-colors hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
               검색
             </button>
@@ -390,7 +540,9 @@ function MainPage() {
           <span>
             {isLoading
               ? '검색 결과 불러오는 중...'
-              : `검색 결과 ${totalItems}개${totalPages > 1 ? ` (${currentPage}/${totalPages}페이지)` : ''}`}
+              : `검색 결과 ${totalItems}개${
+                  totalPages > 1 ? ` (${currentPage}/${totalPages}페이지)` : ''
+                }`}
           </span>
         </div>
 
@@ -408,7 +560,7 @@ function MainPage() {
 
         <section className="mt-3 overflow-hidden rounded-[6px] border border-[#e6e9ef] bg-white shadow-sm">
           <AnnouncementList // 공지리스트를 컴포넌트로 밖으로 싹 뺐음. 각종 state 넘겨주면서.
-            announcements={filteredAnnouncements}
+            announcements={announcements}
             favorites={favorites} // favorite 들에 하트 표시 해야해서 state로 정의해야.
             onToggleFavorite={(item) => toggleFavorite(item.id)}
             onSelectAnnouncement={(item) => setSelectedPostId(item.id)}
