@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import AnnouncementList from '../components/AnnouncementList';
 import HeartButton from '../components/HeartButton';
 import AnnouncementDetailModal from '../components/AnnouncementDetailModal';
-import { getUser, updateUser } from '../api/users';
+import { getUser, updateUser, getUserLikes } from '../api/users';
+import { likePost, unlikePost } from '../api/likes';
 import { CURRENT_USER_ID } from '../config/constants';
+import { transformAnnouncement } from '../utils/transformAnnouncement';
 
 function Switch({ checked, onChange }) {
   return (
@@ -43,6 +45,8 @@ function MyPage() {
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalLikedItems, setTotalLikedItems] = useState(0);
+  const [totalLikedPages, setTotalLikedPages] = useState(0);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -59,28 +63,87 @@ function MyPage() {
     interests: [],
   });
 
-  const toggleLikedNotice = (id) => {
-    setLikedNotices((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, liked: !item.liked } : item)),
-    );
+  // 좋아요 토글 함수 (API 호출)
+  const toggleLikedNotice = async (id) => {
+    const item = likedNotices.find((item) => item.id === id);
+    const isLiked = item?.liked || false;
+
+    try {
+      if (isLiked) {
+        // 좋아요 취소 - 로컬 상태만 업데이트 (목록에서 제거하지 않음)
+        await unlikePost(CURRENT_USER_ID, id);
+        setLikedNotices((prev) =>
+          prev.map((item) => (item.id === id ? { ...item, liked: false } : item)),
+        );
+      } else {
+        // 좋아요 추가 - 로컬 상태만 업데이트
+        await likePost(CURRENT_USER_ID, id);
+        setLikedNotices((prev) =>
+          prev.map((item) => (item.id === id ? { ...item, liked: true } : item)),
+        );
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      // 에러 발생 시 롤백하지 않음
+    }
   };
 
-  const toggleRecommended = (id) => {
-    setRecommendations((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, liked: !item.liked } : item)),
-    );
+  const toggleRecommended = async (id) => {
+    const item = recommendations.find((item) => item.id === id);
+    const isLiked = item?.liked || false;
+
+    try {
+      if (isLiked) {
+        // 좋아요 취소
+        await unlikePost(CURRENT_USER_ID, id);
+        setRecommendations((prev) =>
+          prev.map((item) => (item.id === id ? { ...item, liked: false } : item)),
+        );
+      } else {
+        // 좋아요 추가
+        await likePost(CURRENT_USER_ID, id);
+        setRecommendations((prev) =>
+          prev.map((item) => (item.id === id ? { ...item, liked: true } : item)),
+        );
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      // 에러 발생 시 롤백하지 않음
+    }
   };
 
-  // 페이지네이션 계산 (관심 활동용)
-  const totalLikedItems = likedNotices.length;
-  const totalLikedPages = Math.ceil(totalLikedItems / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedLikedNotices = likedNotices.slice(startIndex, endIndex);
+  // 백엔드 응답을 프론트엔드 형식으로 변환 (좋아요 목록용)
+  const transformLikedAnnouncement = (item) => {
+    const transformed = transformAnnouncement(item);
+    return {
+      ...transformed,
+      liked: true, // 좋아요 목록이므로 항상 true
+    };
+  };
+
+  // 좋아요 목록 로드
+  const loadLikedNotices = async (page = 1) => {
+    setIsLoadingData(true);
+    try {
+      const data = await getUserLikes(CURRENT_USER_ID, { page, page_size: pageSize });
+      const transformedItems = data.items.map(transformLikedAnnouncement);
+      setLikedNotices(transformedItems);
+      setTotalLikedItems(data.meta.total);
+      setTotalLikedPages(data.meta.total_pages);
+    } catch (error) {
+      console.error('Error loading liked notices:', error);
+      setLikedNotices([]);
+      setTotalLikedItems(0);
+      setTotalLikedPages(0);
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
 
   // 페이지 변경 핸들러
   const handlePageChange = (page) => {
     setCurrentPage(page);
+    loadLikedNotices(page);
     // 페이지 변경 시 스크롤을 맨 위로
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -88,6 +151,14 @@ function MyPage() {
   // 탭 변경 시 첫 페이지로 이동
   useEffect(() => {
     setCurrentPage(1);
+  }, [activeTab]);
+
+  // 좋아요 목록 초기 로드 및 페이지 변경 시 재로드
+  useEffect(() => {
+    if (activeTab === 'activities') {
+      loadLikedNotices(currentPage);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   // 프로필 조회
@@ -116,25 +187,22 @@ function MyPage() {
     loadProfile();
   }, []);
 
-  // 더미데이터 로드
+  // AI 추천 더미데이터 로드 (백엔드 API 구현 전까지)
   useEffect(() => {
-    const loadData = async () => {
+    const loadRecommendations = async () => {
       try {
         const response = await fetch('/interested_dummy_data.json');
         if (!response.ok) {
           throw new Error('Failed to fetch interested dummy data');
         }
         const data = await response.json();
-        setLikedNotices(data.liked ?? []);
         setRecommendations(data.recommended ?? []);
       } catch (error) {
-        console.error('Error loading interested dummy data:', error);
-      } finally {
-        setIsLoadingData(false);
+        console.error('Error loading recommendations:', error);
       }
     };
 
-    loadData();
+    loadRecommendations();
   }, []);
 
   return (
@@ -197,7 +265,7 @@ function MyPage() {
                   </h2>
                 </div>
                 <AnnouncementList
-                  announcements={paginatedLikedNotices}
+                  announcements={likedNotices}
                   isFavorite={(item) => item.liked}
                   onToggleFavorite={(item) => toggleLikedNotice(item.id)}
                   onSelectAnnouncement={(item) => setSelectedAnnouncement(item)}

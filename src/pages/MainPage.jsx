@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import AnnouncementList from '../components/AnnouncementList';
 import AnnouncementDetailModal from '../components/AnnouncementDetailModal';
 import { getFeed } from '../api/feed';
+import { likePost, unlikePost } from '../api/likes';
+import { CURRENT_USER_ID } from '../config/constants';
+import { transformAnnouncement } from '../utils/transformAnnouncement';
 
 function MainPage() {
   // 사용하고 있는 state 선언
@@ -30,45 +33,6 @@ function MainPage() {
   const pageSize = 20;
 
   const activeCategory = categories[activeCategoryIndex];
-
-  // 백엔드 응답을 프론트엔드 형식으로 변환
-  const transformAnnouncement = (item) => {
-    // 날짜 형식 변환: ISO 8601 → "MM.DD"
-    const formatDate = (dateStr) => {
-      if (!dateStr) return '-';
-      try {
-        const date = new Date(dateStr);
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${month}.${day}`;
-      } catch {
-        return dateStr;
-      }
-    };
-
-    // deadline 형식 변환: ISO 8601 → "~ MM.DD"
-    const formatDeadline = (dateStr) => {
-      if (!dateStr) return '-';
-      try {
-        const date = new Date(dateStr);
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `~ ${month}.${day}`;
-      } catch {
-        return dateStr;
-      }
-    };
-
-    // tags를 sub로 변환 (슬래시로 구분된 문자열)
-    const sub = item.tags && item.tags.length > 0 ? item.tags.join('/') : null;
-
-    return {
-      ...item,
-      postedAt: formatDate(item.posted_at),
-      deadline: formatDeadline(item.deadline),
-      sub, // tags를 sub로 변환
-    };
-  };
 
   // 출처 필터링 (클라이언트 사이드, 백엔드 구현 전까지)
   let filteredAnnouncements = announcements;
@@ -169,17 +133,32 @@ function MainPage() {
     return `${selectedSources.size}개 선택됨`;
   };
 
-  // 누르면 즐겨찾기 state에 추가, 누르면 즐겨찾기 삭제하는 함수
-  const toggleFavorite = (id) => {
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
+  // 좋아요 토글 함수 (API 호출)
+  const toggleFavorite = async (id) => {
+    const isLiked = favorites.has(id);
+
+    try {
+      if (isLiked) {
+        // 좋아요 취소
+        await unlikePost(CURRENT_USER_ID, id);
+        setFavorites((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
       } else {
-        next.add(id);
+        // 좋아요 추가
+        await likePost(CURRENT_USER_ID, id);
+        setFavorites((prev) => {
+          const next = new Set(prev);
+          next.add(id);
+          return next;
+        });
       }
-      return next;
-    });
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      // 에러 발생 시 롤백하지 않음 (사용자에게 에러 표시만)
+    }
   };
 
   // 드롭다운 외부 클릭 시 닫기
@@ -379,7 +358,7 @@ function MainPage() {
         <section className="mt-3 overflow-hidden rounded-[6px] border border-[#e6e9ef] bg-white shadow-sm">
           <AnnouncementList // 공지리스트를 컴포넌트로 밖으로 싹 뺐음. 각종 state 넘겨주면서.
             announcements={filteredAnnouncements}
-            favorites={favorites}
+            favorites={favorites} // favorite 들에 하트 표시 해야해서 state로 정의해야.
             onToggleFavorite={(item) => toggleFavorite(item.id)}
             onSelectAnnouncement={(item) => setSelectedAnnouncement(item)}
             loading={isLoading}
