@@ -1,18 +1,38 @@
 import { useState, useRef, useEffect } from 'react';
+import { sendChatMessage } from '../api/chat';
+import { getUser } from '../api/users';
+import { CURRENT_USER_ID } from '../config/constants';
 
 function ChatWidget({ isOpen, onClose }) {
   const [messages, setMessages] = useState([
     {
       id: 1,
       type: 'bot',
-      content: '안녕하세요! NotiSNU 챗봇입니다. 궁금한 공지사항이나 활동에 대해 물어보세요.',
+      content: '안녕하세요! NotiSNU 챗봇입니다.\n궁금한 공지사항이나 활동에 대해 물어보세요!',
       timestamp: new Date(),
     },
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  // 사용자 정보 로드 (department, grade)
+  useEffect(() => {
+    const loadUserInfo = async () => {
+      try {
+        const user = await getUser(CURRENT_USER_ID);
+        setUserInfo(user);
+      } catch (error) {
+        console.error('Failed to load user info:', error);
+        // 사용자 정보 로드 실패해도 계속 진행
+      }
+    };
+    if (isOpen) {
+      loadUserInfo();
+    }
+  }, [isOpen]);
 
   // 드래그 및 리사이즈 상태
   const [position, setPosition] = useState(() => {
@@ -204,12 +224,13 @@ function ChatWidget({ isOpen, onClose }) {
 
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || isTyping) return;
 
+    const question = inputValue.trim();
     const userMessage = {
-      id: messages.length + 1,
+      id: Date.now(),
       type: 'user',
-      content: inputValue.trim(),
+      content: question,
       timestamp: new Date(),
     };
 
@@ -217,21 +238,39 @@ function ChatWidget({ isOpen, onClose }) {
     setInputValue('');
     setIsTyping(true);
 
-    // TODO: 백엔드 API 호출
-    // const response = await fetch('/api/chat', { ... });
-    // const botResponse = await response.json();
+    try {
+      // API 호출
+      const response = await sendChatMessage({
+        question,
+        user_id: CURRENT_USER_ID,
+        department: userInfo?.department || null,
+        grade: userInfo?.grade || null,
+      });
 
-    // 더미 응답 (나중에 API로 교체)
-    setTimeout(() => {
       const botMessage = {
-        id: messages.length + 2,
+        id: Date.now() + 1,
         type: 'bot',
-        content: '죄송합니다. 아직 챗봇 기능이 준비 중입니다. 곧 만나요!',
+        content: response.answer,
         timestamp: new Date(),
+        citations: response.citations || [],
+        notices: response.notices || [],
+        meta: response.meta || {},
       };
+
       setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      console.error('Failed to send chat message:', error);
+      const errorMessage = {
+        id: Date.now() + 1,
+        type: 'bot',
+        content: '죄송합니다. 답변을 생성하는 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+        timestamp: new Date(),
+        isError: true,
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -287,7 +326,7 @@ function ChatWidget({ isOpen, onClose }) {
         </div>
 
         {/* 메시지 영역 */}
-        <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="flex-1 overflow-y-auto px-3 py-4">
           <div className="space-y-4">
             {messages.map((message) => (
               <div
@@ -295,7 +334,7 @@ function ChatWidget({ isOpen, onClose }) {
                 className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[75%] rounded-[12px] px-4 py-2.5 ${
+                  className={`max-w-[85%] rounded-[12px] px-4 py-2.5 ${
                     message.type === 'user'
                       ? 'bg-[#0b3aa2] text-white'
                       : 'bg-[#f1f4f9] text-[#1e232e]'
