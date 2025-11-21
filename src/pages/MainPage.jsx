@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AnnouncementList from '../components/AnnouncementList';
 import AnnouncementDetailModal from '../components/AnnouncementDetailModal';
 import { getFeed } from '../api/feed';
@@ -10,6 +10,8 @@ import { CURRENT_USER_ID } from '../config/constants';
 import { transformAnnouncement } from '../utils/transformAnnouncement';
 
 function MainPage() {
+  const navigate = useNavigate();
+
   // 사용하고 있는 state 선언
   const [categories, setCategories] = useState([
     '전체',
@@ -362,9 +364,16 @@ function MainPage() {
       <div className="mx-auto w-full max-w-[1100px] px-6 pt-9 pb-20">
         <header className="mb-6 border-b border-[#e6e9ef] pt-[10px] pb-[14px]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Link to="/" className="text-[21px] font-semibold tracking-[-0.2px] text-[#0b3aa2]">
+            <button
+              type="button"
+              onClick={() => {
+                // 전체 페이지 리로드로 초기화
+                window.location.href = '/';
+              }}
+              className="text-[21px] font-semibold tracking-[-0.2px] text-[#0b3aa2]"
+            >
               NotiSNU
-            </Link>
+            </button>
             <div className="flex items-center gap-3 text-[15px] text-[#5d6676]">
               <span>
                 <span className="font-semibold text-[#1e232e]">이건무</span> 님 환영합니다
