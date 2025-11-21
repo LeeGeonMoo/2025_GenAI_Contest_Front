@@ -25,7 +25,7 @@ function MainPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [favorites, setFavorites] = useState(() => new Set());
-  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
+  const [selectedPostId, setSelectedPostId] = useState(null);
   const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
   const [selectedSources, setSelectedSources] = useState(() => new Set());
   const [currentPage, setCurrentPage] = useState(1);
@@ -411,7 +411,7 @@ function MainPage() {
             announcements={filteredAnnouncements}
             favorites={favorites} // favorite 들에 하트 표시 해야해서 state로 정의해야.
             onToggleFavorite={(item) => toggleFavorite(item.id)}
-            onSelectAnnouncement={(item) => setSelectedAnnouncement(item)}
+            onSelectAnnouncement={(item) => setSelectedPostId(item.id)}
             loading={isLoading}
             error={fetchError}
             emptyMessage="조건에 맞는 공지가 없습니다."
@@ -427,9 +427,9 @@ function MainPage() {
         </section>
       </div>
       <AnnouncementDetailModal
-        open={Boolean(selectedAnnouncement)}
-        onClose={() => setSelectedAnnouncement(null)}
-        announcement={selectedAnnouncement} /* 해당 공지에 해당하는 모달 내용 고르기 위해서 */
+        open={Boolean(selectedPostId)}
+        onClose={() => setSelectedPostId(null)}
+        postId={selectedPostId}
       />
     </div>
   );

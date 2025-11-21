@@ -42,7 +42,7 @@ function MyPage() {
   const [recommendations, setRecommendations] = useState([]);
   const [recommendEmail, setRecommendEmail] = useState(true);
   const [deadlineAlert, setDeadlineAlert] = useState(false);
-  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
+  const [selectedPostId, setSelectedPostId] = useState(null);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalLikedItems, setTotalLikedItems] = useState(0);
@@ -268,7 +268,7 @@ function MyPage() {
                   announcements={likedNotices}
                   isFavorite={(item) => item.liked}
                   onToggleFavorite={(item) => toggleLikedNotice(item.id)}
-                  onSelectAnnouncement={(item) => setSelectedAnnouncement(item)}
+                  onSelectAnnouncement={(item) => setSelectedPostId(item.id)}
                   getSources={(item) => {
                     const sources = item.sources ?? item.source ?? [];
                     // 문자열 배열인 경우 객체 배열로 변환 (호환성 유지)
@@ -584,9 +584,9 @@ function MyPage() {
         </div>
       </div>
       <AnnouncementDetailModal
-        open={Boolean(selectedAnnouncement)}
-        onClose={() => setSelectedAnnouncement(null)}
-        announcement={selectedAnnouncement}
+        open={Boolean(selectedPostId)}
+        onClose={() => setSelectedPostId(null)}
+        postId={selectedPostId}
       />
 
       {/* 저장 성공 알림 */}
