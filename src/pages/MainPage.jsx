@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AnnouncementList from '../components/AnnouncementList';
 import AnnouncementDetailModal from '../components/AnnouncementDetailModal';
-import { getFeed } from '../api/feed';
+import { getFeed, getRecoUser } from '../api/feed';
 import { search as searchAPI } from '../api/search';
 import { likePost, unlikePost } from '../api/likes';
 import { getUserLikes } from '../api/users';
@@ -178,11 +178,32 @@ function MainPage() {
     setIsLoading(true);
     setFetchError(null);
     try {
-      const data = await getFeed({
-        category: category === '전체' || !category ? null : category,
-        page,
-        page_size: pageSize,
-      });
+      let data;
+
+      // '추천' 카테고리인 경우 getRecoUser 호출
+      if (category === '추천') {
+        data = await getRecoUser({
+          user_id: CURRENT_USER_ID,
+          limit: 10, // 현재 나오는건 10개로
+        });
+
+        // 디버깅용: semantic_score 출력
+        console.log(
+          '추천 탭 semantic scores:',
+          data.items.map((item) => ({
+            id: item.id,
+            title: item.title,
+            semantic_score: item.semantic_score,
+          })),
+        );
+      } else {
+        // 일반 카테고리
+        data = await getFeed({
+          category: category === '전체' || !category ? null : category,
+          page,
+          page_size: pageSize,
+        });
+      }
 
       const transformedItems = data.items.map(transformAnnouncement);
       setAnnouncements(transformedItems);
@@ -192,8 +213,10 @@ function MainPage() {
       // 현재 페이지의 항목들에 대한 좋아요 상태 확인
       updateFavoritesForCurrentPage(transformedItems);
 
-      // 전체 출처 목록 수집 (여러 페이지에서 수집)
-      await collectAllSources(category);
+      // 전체 출처 목록 수집 (여러 페이지에서 수집) - 추천 탭이 아닐 때만
+      if (category !== '추천') {
+        await collectAllSources(category);
+      }
     } catch (error) {
       console.error('Failed to load feed:', error);
       setFetchError('데이터를 불러오지 못했습니다.');
