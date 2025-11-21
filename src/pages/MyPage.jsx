@@ -11,6 +11,7 @@ import {
   updateNotifications,
 } from '../api/users';
 import { likePost, unlikePost } from '../api/likes';
+import { getRecoLikes } from '../api/feed';
 import { CURRENT_USER_ID } from '../config/constants';
 import { transformAnnouncement } from '../utils/transformAnnouncement';
 
@@ -215,18 +216,32 @@ function MyPage() {
     loadNotifications();
   }, []);
 
-  // AI 추천 더미데이터 로드 (백엔드 API 구현 전까지)
+  // AI 추천 데이터 로드 (백엔드 API)
   useEffect(() => {
     const loadRecommendations = async () => {
       try {
-        const response = await fetch('/interested_dummy_data.json');
-        if (!response.ok) {
-          throw new Error('Failed to fetch interested dummy data');
-        }
-        const data = await response.json();
-        setRecommendations(data.recommended ?? []);
+        const data = await getRecoLikes({
+          user_id: CURRENT_USER_ID,
+          limit: 10,
+        });
+
+        const transformedItems = data.items.map(transformAnnouncement);
+
+        // 디버깅용: semantic_score 출력
+        console.log(
+          'AI 추천 semantic scores:',
+          data.items.map((item) => ({
+            id: item.id,
+            title: item.title,
+            semantic_score: item.semantic_score,
+          })),
+        );
+
+        setRecommendations(transformedItems);
       } catch (error) {
         console.error('Error loading recommendations:', error);
+        // 에러 발생 시 빈 배열로 설정
+        setRecommendations([]);
       }
     };
 

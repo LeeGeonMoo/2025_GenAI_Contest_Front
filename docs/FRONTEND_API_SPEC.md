@@ -178,7 +178,8 @@
         }
       ],
       "posted_at": "2024-01-01T00:00:00Z",
-      "deadline": "2024-01-31T00:00:00Z | null"
+      "deadline": "2024-01-31T00:00:00Z | null",
+      "semantic_score": 0.95 // 디버깅용 추가
     }
   ],
   "meta": {
