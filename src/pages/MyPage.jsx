@@ -13,14 +13,16 @@ function Switch({ checked, onChange }) {
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className={`relative h-[26px] w-[46px] rounded-full transition-colors ${
+      className={`relative h-[26px] w-[46px] rounded-full transition-colors duration-200 ease-in-out ${
         checked ? 'bg-[#0b3aa2]' : 'bg-[#cfd5df]'
       }`}
       aria-pressed={checked}
     >
       <span
-        className="absolute top-1 h-[18px] w-[18px] rounded-full bg-white transition-transform"
-        style={{ transform: checked ? 'translateX(20px)' : 'translateX(4px)' }}
+        className="absolute top-[4px] h-[18px] w-[18px] rounded-full bg-white shadow-sm transition-all duration-200 ease-in-out"
+        style={{
+          left: checked ? 'calc(100% - 18px - 4px)' : '4px',
+        }}
       />
       <span className="sr-only">토글</span>
     </button>
