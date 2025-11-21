@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import AnnouncementList from '../components/AnnouncementList';
 import HeartButton from '../components/HeartButton';
 import AnnouncementDetailModal from '../components/AnnouncementDetailModal';
+import { getUser, updateUser } from '../api/users';
+import { CURRENT_USER_ID } from '../config/constants';
 
 function Switch({ checked, onChange }) {
   return (
@@ -42,16 +44,19 @@ function MyPage() {
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState(null);
   const pageSize = 20;
 
   // 프로필 수정 폼 상태
   const [profileForm, setProfileForm] = useState({
-    name: '이건무',
-    college: '공과대학',
-    department: '컴퓨터공학부',
-    grade: '3',
-    email: 'moo@snu.ac.kr',
-    interests: ['채용/인턴', 'AI/데이터'],
+    name: '',
+    college: '',
+    department: '',
+    grade: '',
+    email: '',
+    interests: [],
   });
 
   const toggleLikedNotice = (id) => {
@@ -84,6 +89,32 @@ function MyPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [activeTab]);
+
+  // 프로필 조회
+  useEffect(() => {
+    const loadProfile = async () => {
+      setIsLoadingProfile(true);
+      setProfileError(null);
+      try {
+        const userData = await getUser(CURRENT_USER_ID);
+        setProfileForm({
+          name: userData.name || '',
+          college: userData.college || '',
+          department: userData.department || '',
+          grade: userData.grade || '',
+          email: userData.email || '',
+          interests: userData.interests || [],
+        });
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        setProfileError('프로필을 불러오지 못했습니다.');
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    loadProfile();
+  }, []);
 
   // 더미데이터 로드
   useEffect(() => {
@@ -199,184 +230,212 @@ function MyPage() {
                   <h2 className="text-[16px] font-semibold text-[#1e232e]">프로필 수정</h2>
                 </div>
                 <div className="px-4 py-6">
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      // TODO: API 호출로 프로필 저장
-                      console.log('프로필 저장:', profileForm);
-                      setShowSaveSuccess(true);
-                      setTimeout(() => {
-                        setShowSaveSuccess(false);
-                      }, 3000);
-                    }}
-                    className="space-y-6"
-                  >
-                    {/* 이름 */}
-                    <div>
-                      <label
-                        htmlFor="name"
-                        className="mb-2 block text-[14px] font-medium text-[#1e232e]"
-                      >
-                        이름
-                      </label>
-                      <input
-                        type="text"
-                        id="name"
-                        value={profileForm.name}
-                        onChange={(e) =>
-                          setProfileForm((prev) => ({ ...prev, name: e.target.value }))
-                        }
-                        className="w-full rounded-[6px] border border-[#e6e9ef] px-3 py-2 text-[15px] text-[#1e232e] transition-colors outline-none focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
-                      />
+                  {isLoadingProfile ? (
+                    <div className="py-8 text-center text-[14px] text-[#7a8497]">
+                      프로필을 불러오는 중입니다...
                     </div>
-
-                    {/* 단과대학 */}
-                    <div>
-                      <label
-                        htmlFor="college"
-                        className="mb-2 block text-[14px] font-medium text-[#1e232e]"
+                  ) : (
+                    <>
+                      {profileError && (
+                        <div className="mb-4 rounded-[6px] border border-[#c73531] bg-[#fef2f2] px-3 py-2 text-[14px] text-[#c73531]">
+                          {profileError}
+                        </div>
+                      )}
+                      <form
+                        onSubmit={async (e) => {
+                          e.preventDefault();
+                          setIsSavingProfile(true);
+                          setProfileError(null);
+                          try {
+                            await updateUser(CURRENT_USER_ID, {
+                              name: profileForm.name,
+                              college: profileForm.college,
+                              department: profileForm.department,
+                              grade: profileForm.grade,
+                              interests: profileForm.interests,
+                            });
+                            setShowSaveSuccess(true);
+                            setTimeout(() => {
+                              setShowSaveSuccess(false);
+                            }, 3000);
+                          } catch (error) {
+                            console.error('Error saving profile:', error);
+                            setProfileError('프로필 저장에 실패했습니다.');
+                          } finally {
+                            setIsSavingProfile(false);
+                          }
+                        }}
+                        className="space-y-6"
                       >
-                        단과대학
-                      </label>
-                      <input
-                        type="text"
-                        id="college"
-                        value={profileForm.college}
-                        onChange={(e) =>
-                          setProfileForm((prev) => ({ ...prev, college: e.target.value }))
-                        }
-                        className="w-full rounded-[6px] border border-[#e6e9ef] px-3 py-2 text-[15px] text-[#1e232e] transition-colors outline-none focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
-                      />
-                    </div>
+                        {/* 이름 */}
+                        <div>
+                          <label
+                            htmlFor="name"
+                            className="mb-2 block text-[14px] font-medium text-[#1e232e]"
+                          >
+                            이름
+                          </label>
+                          <input
+                            type="text"
+                            id="name"
+                            value={profileForm.name}
+                            onChange={(e) =>
+                              setProfileForm((prev) => ({ ...prev, name: e.target.value }))
+                            }
+                            className="w-full rounded-[6px] border border-[#e6e9ef] px-3 py-2 text-[15px] text-[#1e232e] transition-colors outline-none focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
+                          />
+                        </div>
 
-                    {/* 학과 */}
-                    <div>
-                      <label
-                        htmlFor="department"
-                        className="mb-2 block text-[14px] font-medium text-[#1e232e]"
-                      >
-                        학과
-                      </label>
-                      <input
-                        type="text"
-                        id="department"
-                        value={profileForm.department}
-                        onChange={(e) =>
-                          setProfileForm((prev) => ({ ...prev, department: e.target.value }))
-                        }
-                        className="w-full rounded-[6px] border border-[#e6e9ef] px-3 py-2 text-[15px] text-[#1e232e] transition-colors outline-none focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
-                      />
-                    </div>
+                        {/* 단과대학 */}
+                        <div>
+                          <label
+                            htmlFor="college"
+                            className="mb-2 block text-[14px] font-medium text-[#1e232e]"
+                          >
+                            단과대학
+                          </label>
+                          <input
+                            type="text"
+                            id="college"
+                            value={profileForm.college}
+                            onChange={(e) =>
+                              setProfileForm((prev) => ({ ...prev, college: e.target.value }))
+                            }
+                            className="w-full rounded-[6px] border border-[#e6e9ef] px-3 py-2 text-[15px] text-[#1e232e] transition-colors outline-none focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
+                          />
+                        </div>
 
-                    {/* 학년 */}
-                    <div>
-                      <label
-                        htmlFor="grade"
-                        className="mb-2 block text-[14px] font-medium text-[#1e232e]"
-                      >
-                        학년
-                      </label>
-                      <select
-                        id="grade"
-                        value={profileForm.grade}
-                        onChange={(e) =>
-                          setProfileForm((prev) => ({ ...prev, grade: e.target.value }))
-                        }
-                        className="w-full rounded-[6px] border border-[#e6e9ef] px-3 py-2 text-[15px] text-[#1e232e] transition-colors outline-none focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
-                      >
-                        <option value="1">1학년</option>
-                        <option value="2">2학년</option>
-                        <option value="3">3학년</option>
-                        <option value="4">4학년</option>
-                        <option value="5">5학년 이상</option>
-                      </select>
-                    </div>
+                        {/* 학과 */}
+                        <div>
+                          <label
+                            htmlFor="department"
+                            className="mb-2 block text-[14px] font-medium text-[#1e232e]"
+                          >
+                            학과
+                          </label>
+                          <input
+                            type="text"
+                            id="department"
+                            value={profileForm.department}
+                            onChange={(e) =>
+                              setProfileForm((prev) => ({ ...prev, department: e.target.value }))
+                            }
+                            className="w-full rounded-[6px] border border-[#e6e9ef] px-3 py-2 text-[15px] text-[#1e232e] transition-colors outline-none focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
+                          />
+                        </div>
 
-                    {/* 스누메일 */}
-                    <div>
-                      <label
-                        htmlFor="email"
-                        className="mb-2 block text-[14px] font-medium text-[#1e232e]"
-                      >
-                        스누메일
-                      </label>
-                      <input
-                        type="email"
-                        id="email"
-                        value={profileForm.email}
-                        onChange={(e) =>
-                          setProfileForm((prev) => ({ ...prev, email: e.target.value }))
-                        }
-                        className="w-full rounded-[6px] border border-[#e6e9ef] bg-[#f8f9fb] px-3 py-2 text-[15px] text-[#5d6676] outline-none"
-                        readOnly
-                      />
-                      <p className="mt-1 text-[12px] text-[#7a8497]">
-                        스누메일은 변경할 수 없습니다.
-                      </p>
-                    </div>
+                        {/* 학년 */}
+                        <div>
+                          <label
+                            htmlFor="grade"
+                            className="mb-2 block text-[14px] font-medium text-[#1e232e]"
+                          >
+                            학년
+                          </label>
+                          <select
+                            id="grade"
+                            value={profileForm.grade}
+                            onChange={(e) =>
+                              setProfileForm((prev) => ({ ...prev, grade: e.target.value }))
+                            }
+                            className="w-full rounded-[6px] border border-[#e6e9ef] px-3 py-2 text-[15px] text-[#1e232e] transition-colors outline-none focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
+                          >
+                            <option value="1">1학년</option>
+                            <option value="2">2학년</option>
+                            <option value="3">3학년</option>
+                            <option value="4">4학년</option>
+                            <option value="5">5학년 이상</option>
+                          </select>
+                        </div>
 
-                    {/* 관심 분야 */}
-                    <div>
-                      <label className="mb-3 block text-[14px] font-medium text-[#1e232e]">
-                        관심 분야{' '}
-                        <span className="text-[12px] text-[#7a8497]">(중복 선택 가능)</span>
-                      </label>
-                      <div className="space-y-4">
-                        {Object.entries(INTEREST_CATEGORIES).map(([category, items]) => (
-                          <div key={category}>
-                            <h3 className="mb-2 text-[13px] font-semibold text-[#5d6676]">
-                              {category}
-                            </h3>
-                            <div className="flex flex-wrap gap-2">
-                              {items.map((item) => {
-                                const isChecked = profileForm.interests.includes(item);
-                                return (
-                                  <label
-                                    key={item}
-                                    className={`inline-flex cursor-pointer items-center rounded-[6px] border px-3 py-2 text-[13px] font-medium transition-colors ${
-                                      isChecked
-                                        ? 'border-[#0b3aa2] bg-[#f0f4ff] text-[#0b3aa2]'
-                                        : 'border-[#e6e9ef] bg-white text-[#5d6676] hover:border-[#d3d8e0]'
-                                    }`}
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={isChecked}
-                                      onChange={(e) => {
-                                        if (e.target.checked) {
-                                          setProfileForm((prev) => ({
-                                            ...prev,
-                                            interests: [...prev.interests, item],
-                                          }));
-                                        } else {
-                                          setProfileForm((prev) => ({
-                                            ...prev,
-                                            interests: prev.interests.filter((i) => i !== item),
-                                          }));
-                                        }
-                                      }}
-                                      className="sr-only"
-                                    />
-                                    <span>{item}</span>
-                                  </label>
-                                );
-                              })}
-                            </div>
+                        {/* 스누메일 */}
+                        <div>
+                          <label
+                            htmlFor="email"
+                            className="mb-2 block text-[14px] font-medium text-[#1e232e]"
+                          >
+                            스누메일
+                          </label>
+                          <input
+                            type="email"
+                            id="email"
+                            value={profileForm.email}
+                            onChange={(e) =>
+                              setProfileForm((prev) => ({ ...prev, email: e.target.value }))
+                            }
+                            className="w-full rounded-[6px] border border-[#e6e9ef] bg-[#f8f9fb] px-3 py-2 text-[15px] text-[#5d6676] outline-none"
+                            readOnly
+                          />
+                          <p className="mt-1 text-[12px] text-[#7a8497]">
+                            스누메일은 변경할 수 없습니다.
+                          </p>
+                        </div>
+
+                        {/* 관심 분야 */}
+                        <div>
+                          <label className="mb-3 block text-[14px] font-medium text-[#1e232e]">
+                            관심 분야{' '}
+                            <span className="text-[12px] text-[#7a8497]">(중복 선택 가능)</span>
+                          </label>
+                          <div className="space-y-4">
+                            {Object.entries(INTEREST_CATEGORIES).map(([category, items]) => (
+                              <div key={category}>
+                                <h3 className="mb-2 text-[13px] font-semibold text-[#5d6676]">
+                                  {category}
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                  {items.map((item) => {
+                                    const isChecked = profileForm.interests.includes(item);
+                                    return (
+                                      <label
+                                        key={item}
+                                        className={`inline-flex cursor-pointer items-center rounded-[6px] border px-3 py-2 text-[13px] font-medium transition-colors ${
+                                          isChecked
+                                            ? 'border-[#0b3aa2] bg-[#f0f4ff] text-[#0b3aa2]'
+                                            : 'border-[#e6e9ef] bg-white text-[#5d6676] hover:border-[#d3d8e0]'
+                                        }`}
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          checked={isChecked}
+                                          onChange={(e) => {
+                                            if (e.target.checked) {
+                                              setProfileForm((prev) => ({
+                                                ...prev,
+                                                interests: [...prev.interests, item],
+                                              }));
+                                            } else {
+                                              setProfileForm((prev) => ({
+                                                ...prev,
+                                                interests: prev.interests.filter((i) => i !== item),
+                                              }));
+                                            }
+                                          }}
+                                          className="sr-only"
+                                        />
+                                        <span>{item}</span>
+                                      </label>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </div>
+                        </div>
 
-                    {/* 저장 버튼 */}
-                    <div className="flex justify-end pt-4">
-                      <button
-                        type="submit"
-                        className="rounded-[6px] border border-[#0b3aa2] bg-[#0b3aa2] px-6 py-2 text-[14px] font-medium text-white transition-colors hover:brightness-95"
-                      >
-                        저장하기
-                      </button>
-                    </div>
-                  </form>
+                        {/* 저장 버튼 */}
+                        <div className="flex justify-end pt-4">
+                          <button
+                            type="submit"
+                            disabled={isSavingProfile}
+                            className="rounded-[6px] border border-[#0b3aa2] bg-[#0b3aa2] px-6 py-2 text-[14px] font-medium text-white transition-colors hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {isSavingProfile ? '저장 중...' : '저장하기'}
+                          </button>
+                        </div>
+                      </form>
+                    </>
+                  )}
                 </div>
               </section>
             )}
