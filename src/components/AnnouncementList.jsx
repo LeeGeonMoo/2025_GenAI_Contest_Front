@@ -23,8 +23,8 @@ function AnnouncementList({
   },
   getDeadline = (item) => item.deadline ?? '-',
   getHighlight = (item) => item.highlight,
-  rowClassName = 'grid grid-cols-1 items-start gap-4 px-6 py-4 text-[15px] text-[#1e232e] transition-colors hover:bg-[#f8f9fb] sm:grid-cols-[3fr_1.1fr_1.5fr_1fr_1fr_0.5fr] sm:items-center',
-  headerWrapperClassName = 'hidden grid-cols-[3fr_1.1fr_1.5fr_1fr_1fr_0.5fr] items-center gap-4 border-b border-[#e6e9ef] bg-[#f8f9fb] px-6 py-3 text-[12px] font-semibold tracking-[0.05em] text-[#7a8497] uppercase sm:grid',
+  rowClassName = 'grid grid-cols-1 items-start gap-4 px-6 py-4 text-[15px] text-[#1e232e] transition-colors hover:bg-[#f8f9fb] sm:grid-cols-[3fr_1.1fr_1.5fr_1fr_1fr_0.8fr] sm:items-center',
+  headerWrapperClassName = 'hidden grid-cols-[3fr_1.1fr_1.5fr_1fr_1fr_0.8fr] items-center gap-4 border-b border-[#e6e9ef] bg-[#f8f9fb] px-6 py-3 text-[12px] font-semibold tracking-[0.05em] text-[#7a8497] uppercase sm:grid',
   listClassName = 'divide-y divide-[#e6e9ef]',
   messagePaddingClassName = 'px-6',
   // 페이지네이션 관련 props

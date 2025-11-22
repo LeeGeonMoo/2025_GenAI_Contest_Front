@@ -38,11 +38,12 @@ function ChatWidget({ isOpen, onClose }) {
 
   // 드래그 및 리사이즈 상태
   const [position, setPosition] = useState(() => {
-    // 초기 위치: 우측 하단
+    // 초기 위치: 우측 하단 (화면 끝에서 24px, 바닥에서 0px)
+    // translate-y-full 때문에 처음에는 화면 아래에 숨겨져 있음
     if (typeof window !== 'undefined') {
       return {
-        x: window.innerWidth - 420 - 24, // 우측에서 24px 떨어진 위치
-        y: window.innerHeight - 600, // 하단에 붙임
+        x: window.innerWidth - 420 - 24,
+        y: window.innerHeight - 600,
       };
     }
     return { x: 0, y: 0 };
@@ -285,13 +286,11 @@ function ChatWidget({ isOpen, onClose }) {
       <div
         ref={widgetRef}
         className={`fixed z-50 flex flex-col rounded-[16px] bg-white shadow-2xl transition-transform duration-300 ease-out ${
-          isOpen ? 'translate-y-0' : 'pointer-events-none translate-y-full'
+          isOpen ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-[20px] opacity-0'
         } ${isDragging ? 'cursor-move' : ''}`}
         style={{
-          right: isOpen ? undefined : '24px',
-          bottom: isOpen ? undefined : 0,
-          left: isOpen ? `${position.x}px` : undefined,
-          top: isOpen ? `${position.y}px` : undefined,
+          left: `${position.x}px`,
+          top: `${position.y}px`,
           width: `${size.width}px`,
           height: `${size.height}px`,
         }}
