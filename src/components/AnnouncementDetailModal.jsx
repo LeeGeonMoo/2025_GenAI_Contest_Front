@@ -260,7 +260,7 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
             </div>
 
             {/* 단과대학 */}
-            {college && (
+            {college && college !== 'Dummy College' && (
               <div className="rounded-lg border border-[#e6e9ef] bg-white p-4">
                 <dt className="mb-1 text-[12px] font-semibold text-[#7a8497]">단과대학</dt>
                 <dd className="text-[14px] font-medium text-[#1e232e]">{college}</dd>
@@ -269,7 +269,11 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
 
             {/* 학과/부서 */}
             {department && (
-              <div className="rounded-lg border border-[#e6e9ef] bg-white p-4">
+              <div
+                className={`rounded-lg border border-[#e6e9ef] bg-white p-4 ${
+                  !college || college === 'Dummy College' ? 'sm:col-span-2' : ''
+                }`}
+              >
                 <dt className="mb-1 text-[12px] font-semibold text-[#7a8497]">학과/부서</dt>
                 <dd className="text-[14px] font-medium text-[#1e232e]">{department}</dd>
               </div>
