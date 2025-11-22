@@ -361,7 +361,7 @@ function MainPage() {
   return (
     <div className="min-h-screen bg-white">
       <div className="mx-auto w-full max-w-[1280px] px-6 pt-9 pb-20">
-        <header className="mb-6 border-b border-[#e6e9ef] pt-[10px] pb-[14px]">
+        <header className="mb-6 border-b border-[#c5cedd] pt-[10px] pb-[14px]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Link to="/" className="text-[21px] font-semibold tracking-[-0.2px] text-[#0b3aa2]">
               NotiSNU
@@ -381,7 +381,7 @@ function MainPage() {
         </header>
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <div className="space-y-4">
-            <nav className="rounded-[8px] border border-[#e6e9ef] px-4 py-3">
+            <nav className="rounded-[8px] border border-[#c5cedd] px-4 py-3">
               <div className="flex flex-wrap gap-4 text-[15px] font-medium text-[#5d6676]">
                 {categories.map((item, index) => {
                   const isActive = index === activeCategoryIndex;
@@ -408,9 +408,9 @@ function MainPage() {
               </div>
             </nav>
 
-            <section className="rounded-[6px] border border-[#e6e9ef] bg-white p-4 shadow-sm">
+            <section className="rounded-[6px] border border-[#c5cedd] bg-white p-4">
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
-                <div className="flex items-center gap-3 rounded-[6px] border border-[#e6e9ef] px-3 py-2">
+                <div className="flex items-center gap-3 rounded-[6px] border border-[#c5cedd] px-3 py-2">
                   <span className="inline-flex h-5 w-5 items-center justify-center text-[#5d6676]">
                     <svg viewBox="0 0 20 20" aria-hidden="true" className="h-5 w-5">
                       <path
@@ -442,7 +442,7 @@ function MainPage() {
                       e.stopPropagation();
                       setIsSourceDropdownOpen(!isSourceDropdownOpen);
                     }}
-                    className="flex w-full items-center justify-between rounded-[6px] border border-[#e6e9ef] px-3 py-2 text-left text-[14px] font-medium text-[#1e232e] transition-colors hover:bg-[#f8f9fb]"
+                    className="flex w-full items-center justify-between rounded-[6px] border border-[#c5cedd] px-3 py-2 text-left text-[14px] font-medium text-[#1e232e] transition-colors hover:bg-[#f8f9fb]"
                     aria-expanded={isSourceDropdownOpen}
                     aria-haspopup="listbox"
                   >
@@ -464,7 +464,7 @@ function MainPage() {
                   </button>
                   {isSourceDropdownOpen && (
                     <div
-                      className="absolute z-10 mt-1 w-full rounded-[6px] border border-[#e6e9ef] bg-white shadow-lg"
+                      className="absolute z-10 mt-1 w-full rounded-[6px] border border-[#c5cedd] bg-white"
                       role="listbox"
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -511,7 +511,7 @@ function MainPage() {
                     const category = activeCategoryIndex === 0 ? null : activeCategory;
                     loadFeed(category, 1);
                   }}
-                  className="rounded-[6px] border border-[#e6e9ef] px-[12px] py-[7px] text-[14px] font-medium text-[#1e232e] transition-colors hover:bg-[#f8f9fb]"
+                  className="rounded-[6px] border border-[#c5cedd] px-[12px] py-[7px] text-[14px] font-medium text-[#1e232e] transition-colors hover:bg-[#f8f9fb]"
                 >
                   초기화
                 </button>
@@ -546,7 +546,7 @@ function MainPage() {
                   }`}
             </div>
 
-            <section className="overflow-hidden rounded-[6px] border border-[#e6e9ef] bg-white shadow-sm">
+            <section className="overflow-hidden rounded-[6px] border border-[#c5cedd] bg-white">
               <AnnouncementList
                 announcements={announcements}
                 favorites={favorites}

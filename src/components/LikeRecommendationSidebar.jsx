@@ -44,7 +44,7 @@ function LikeRecommendationSidebar({ onSelectAnnouncement, favorites, onToggleFa
     return (
       <aside className="hidden lg:block lg:w-[280px] xl:w-[320px]">
         <div className="sticky top-6">
-          <div className="rounded-lg border border-[#e6e9ef] bg-white p-4 shadow-sm">
+          <div className="rounded-lg border border-[#c5cedd] bg-white p-4">
             <h2 className="mb-3 text-[14px] font-semibold text-[#1e232e]">
               이런 공지도 좋아하실 것 같아요
             </h2>
@@ -63,7 +63,7 @@ function LikeRecommendationSidebar({ onSelectAnnouncement, favorites, onToggleFa
     return (
       <aside className="hidden lg:block lg:w-[280px] xl:w-[320px]">
         <div className="sticky top-6">
-          <div className="rounded-lg border border-[#e6e9ef] bg-white p-4 shadow-sm">
+          <div className="rounded-lg border border-[#c5cedd] bg-white p-4">
             <h2 className="mb-3 text-[14px] font-semibold text-[#1e232e]">
               이런 공지도 좋아하실 것 같아요
             </h2>
@@ -81,9 +81,9 @@ function LikeRecommendationSidebar({ onSelectAnnouncement, favorites, onToggleFa
   return (
     <aside className="hidden lg:block lg:w-[280px] xl:w-[320px]">
       <div className="sticky top-6">
-        <div className="rounded-lg border border-[#e6e9ef] bg-white shadow-sm">
+        <div className="rounded-lg border border-[#c5cedd] bg-white">
           {/* 헤더 */}
-          <div className="border-b border-[#e6e9ef] px-4 py-3">
+          <div className="border-b border-[#c5cedd] px-4 py-3">
             <h2 className="text-[14px] font-semibold text-[#1e232e]">
               이런 공지도 좋아하실 것 같아요
             </h2>
@@ -91,7 +91,7 @@ function LikeRecommendationSidebar({ onSelectAnnouncement, favorites, onToggleFa
           </div>
 
           {/* 추천 리스트 */}
-          <div className="divide-y divide-[#e6e9ef]">
+          <div className="divide-y divide-[#c5cedd]">
             {recommendations.map((item, index) => (
               <RecommendationCard
                 key={item.id}
@@ -194,7 +194,7 @@ function RecommendationCard({ rank, announcement, onSelect, isFavorite, onToggle
 // 스켈레톤
 function SkeletonCard() {
   return (
-    <div className="border-b border-[#e6e9ef] p-3 last:border-0">
+    <div className="border-b border-[#c5cedd] p-3 last:border-0">
       <div className="mb-1.5 h-3 w-16 animate-pulse rounded bg-[#e6e9ef]"></div>
       <div className="mb-1 h-3 w-full animate-pulse rounded bg-[#e6e9ef]"></div>
       <div className="h-3 w-20 animate-pulse rounded bg-[#e6e9ef]"></div>

@@ -4,7 +4,7 @@ function ChatWidgetButton({ onClick, label = '도움이 필요하신가요?' }) 
       <button
         type="button"
         onClick={onClick}
-        className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br from-[#4f8cff] to-[#1b45b0] text-white shadow-[0_15px_30px_rgba(0,68,185,0.25)] transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f8cff]"
+        className="group relative flex h-14 w-14 items-center justify-center rounded-full border border-[#1b45b0] bg-[#1b45b0] text-white transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f8cff]"
         aria-label="채팅 열기"
       >
         <span className="absolute inset-0 rounded-full border border-white/40 opacity-0 transition-opacity group-hover:opacity-100" />

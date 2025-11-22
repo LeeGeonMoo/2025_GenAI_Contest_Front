@@ -285,7 +285,7 @@ function ChatWidget({ isOpen, onClose }) {
       {/* 채팅 창 */}
       <div
         ref={widgetRef}
-        className={`fixed z-50 flex flex-col rounded-[16px] bg-white shadow-2xl transition-transform duration-300 ease-out ${
+        className={`fixed z-50 flex flex-col rounded-[16px] border border-[#c5cedd] bg-white transition-transform duration-300 ease-out ${
           isOpen ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-[20px] opacity-0'
         } ${isDragging ? 'cursor-move' : ''}`}
         style={{
@@ -297,11 +297,11 @@ function ChatWidget({ isOpen, onClose }) {
       >
         {/* 헤더 */}
         <div
-          className="flex cursor-move items-center justify-between border-b border-[#e6e9ef] px-4 py-3 select-none"
+          className="flex cursor-move items-center justify-between border-b border-[#c5cedd] px-4 py-3 select-none"
           onMouseDown={handleMouseDown}
         >
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#4f8cff] to-[#1b45b0]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1b45b0]">
               <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 text-white">
                 <path
                   d="M5.5 4h13a.5.5 0 0 1 .5.5V18a.5.5 0 0 1-.8.4l-3.86-2.9a.5.5 0 0 0-.3-.1h-8.54a.5.5 0 0 1-.5-.5V4.5a.5.5 0 0 1 .5-.5Z"
@@ -428,7 +428,7 @@ function ChatWidget({ isOpen, onClose }) {
                           ),
                           // 구분선
                           hr: ({ node, ...props }) => (
-                            <hr className="my-3 border-t border-[#e6e9ef]" {...props} />
+                            <hr className="my-3 border-t border-[#c5cedd]" {...props} />
                           ),
                         }}
                       >
@@ -457,7 +457,7 @@ function ChatWidget({ isOpen, onClose }) {
         </div>
 
         {/* 입력 영역 */}
-        <div className="border-t border-[#e6e9ef] p-4">
+        <div className="border-t border-[#c5cedd] p-4">
           <form onSubmit={handleSend} className="flex gap-2">
             <input
               ref={inputRef}
@@ -465,7 +465,7 @@ function ChatWidget({ isOpen, onClose }) {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="메시지를 입력하세요..."
-              className="flex-1 rounded-[8px] border border-[#e6e9ef] px-4 py-2.5 text-[14px] text-[#1e232e] transition-colors outline-none placeholder:text-[#9aa3b2] focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
+              className="flex-1 rounded-[8px] border border-[#c5cedd] px-4 py-2.5 text-[14px] text-[#1e232e] transition-colors outline-none placeholder:text-[#9aa3b2] focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
             />
             <button
               type="submit"

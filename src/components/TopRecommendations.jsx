@@ -48,7 +48,7 @@ function TopRecommendations({ onSelectAnnouncement, favorites, onToggleFavorite,
   }, []);
 
   const sectionClass = [
-    'flex min-h-[255px] flex-col rounded-[14px] border border-[#e6e9ef] bg-white p-4 shadow-sm',
+    'flex min-h-[255px] flex-col rounded-[14px] border border-[#c5cedd] bg-white p-4',
     className,
   ]
     .filter(Boolean)
@@ -198,7 +198,7 @@ function RecommendationCard({ announcement, type, onSelect, isFavorite, onToggle
 
 function SkeletonCard() {
   return (
-    <div className="rounded-2xl border border-[#e6e9ef] bg-white p-4">
+    <div className="rounded-2xl border border-[#c5cedd] bg-white p-4">
       <div className="mb-2 h-5 w-20 animate-pulse rounded bg-[#e6e9ef]" />
       <div className="mb-2 h-3 w-full animate-pulse rounded bg-[#e6e9ef]" />
       <div className="mb-1.5 h-4 w-14 animate-pulse rounded bg-[#e6e9ef]" />

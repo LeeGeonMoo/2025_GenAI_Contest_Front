@@ -26,7 +26,7 @@ function Switch({ checked, onChange }) {
       aria-pressed={checked}
     >
       <span
-        className="absolute top-[4px] h-[18px] w-[18px] rounded-full bg-white shadow-sm transition-all duration-200 ease-in-out"
+        className="absolute top-[4px] h-[18px] w-[18px] rounded-full bg-white transition-all duration-200 ease-in-out"
         style={{
           left: checked ? 'calc(100% - 18px - 4px)' : '4px',
         }}
@@ -220,7 +220,7 @@ function MyPage() {
   return (
     <div className="min-h-screen bg-white">
       <div className="mx-auto w-full max-w-[1280px] px-6 pt-9 pb-20">
-        <header className="mb-6 flex flex-col gap-3 border-b border-[#e6e9ef] pt-[10px] pb-[14px] sm:flex-row sm:items-center sm:justify-between">
+        <header className="mb-6 flex flex-col gap-3 border-b border-[#c5cedd] pt-[10px] pb-[14px] sm:flex-row sm:items-center sm:justify-between">
           <Link to="/" className="text-[21px] font-semibold tracking-[-0.2px] text-[#0b3aa2]">
             NotiSNU
           </Link>
@@ -240,7 +240,7 @@ function MyPage() {
         <h1 className="mb-5 text-[22px] font-semibold text-[#1e232e]">마이페이지</h1>
 
         {/* 탭 네비게이션 */}
-        <div className="mb-6 border-b border-[#e6e9ef]">
+        <div className="mb-6 border-b border-[#c5cedd]">
           <div className="flex gap-6">
             <button
               type="button"
@@ -272,8 +272,8 @@ function MyPage() {
           {/* 메인 컨텐츠 */}
           <main className="min-w-0 flex-1">
             {activeTab === 'activities' ? (
-              <section className="overflow-hidden rounded-[6px] border border-[#e6e9ef] bg-white">
-                <div className="border-b border-[#e6e9ef] px-4 py-3">
+              <section className="overflow-hidden rounded-[6px] border border-[#c5cedd] bg-white">
+                <div className="border-b border-[#c5cedd] px-4 py-3">
                   <h2 className="text-[16px] font-semibold text-[#1e232e]">
                     ❤️ 이건무 님의 관심 활동
                   </h2>
@@ -292,8 +292,8 @@ function MyPage() {
                     return sources;
                   }}
                   getDeadline={(item) => item.deadline ?? '-'}
-                  rowClassName="grid grid-cols-1 gap-4 px-4 py-4 text-[15px] text-[#1e232e] transition-colors hover:bg-[#f8f9fb] sm:grid-cols-[3fr_1fr_1.5fr_1fr_1fr_0.8fr] sm:items-center"
-                  listClassName="divide-y divide-[#e6e9ef]"
+                  rowClassName="grid grid-cols-1 gap-4 px-4 py-4 text-[15px] text-[#1e232e] transition-colors hover:bg-[#f3f5fb] sm:grid-cols-[3fr_1fr_1.5fr_1fr_1fr_0.8fr] sm:items-center"
+                  listClassName="divide-y divide-[#c5cedd]"
                   messagePaddingClassName="px-4"
                   emptyMessage="관심 활동이 없습니다."
                   showPagination={totalLikedPages > 1}
@@ -307,8 +307,8 @@ function MyPage() {
                 />
               </section>
             ) : (
-              <section className="overflow-hidden rounded-[6px] border border-[#e6e9ef] bg-white">
-                <div className="border-b border-[#e6e9ef] px-4 py-3">
+              <section className="overflow-hidden rounded-[6px] border border-[#c5cedd] bg-white">
+                <div className="border-b border-[#c5cedd] px-4 py-3">
                   <h2 className="text-[16px] font-semibold text-[#1e232e]">프로필 수정</h2>
                 </div>
                 <div className="px-4 py-6">
@@ -366,7 +366,7 @@ function MyPage() {
                               onChange={(e) =>
                                 setProfileForm((prev) => ({ ...prev, name: e.target.value }))
                               }
-                              className="w-full rounded-[6px] border border-[#e6e9ef] px-3 py-2 text-[15px] text-[#1e232e] transition-colors outline-none focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
+                              className="w-full rounded-[6px] border border-[#c5cedd] px-3 py-2 text-[15px] text-[#1e232e] transition-colors outline-none focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
                             />
                           </div>
 
@@ -385,7 +385,7 @@ function MyPage() {
                               onChange={(e) =>
                                 setProfileForm((prev) => ({ ...prev, college: e.target.value }))
                               }
-                              className="w-full rounded-[6px] border border-[#e6e9ef] px-3 py-2 text-[15px] text-[#1e232e] transition-colors outline-none focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
+                              className="w-full rounded-[6px] border border-[#c5cedd] px-3 py-2 text-[15px] text-[#1e232e] transition-colors outline-none focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
                             />
                           </div>
 
@@ -404,7 +404,7 @@ function MyPage() {
                               onChange={(e) =>
                                 setProfileForm((prev) => ({ ...prev, department: e.target.value }))
                               }
-                              className="w-full rounded-[6px] border border-[#e6e9ef] px-3 py-2 text-[15px] text-[#1e232e] transition-colors outline-none focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
+                              className="w-full rounded-[6px] border border-[#c5cedd] px-3 py-2 text-[15px] text-[#1e232e] transition-colors outline-none focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
                             />
                           </div>
 
@@ -422,7 +422,7 @@ function MyPage() {
                               onChange={(e) =>
                                 setProfileForm((prev) => ({ ...prev, grade: e.target.value }))
                               }
-                              className="w-full rounded-[6px] border border-[#e6e9ef] px-3 py-2 text-[15px] text-[#1e232e] transition-colors outline-none focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
+                              className="w-full rounded-[6px] border border-[#c5cedd] px-3 py-2 text-[15px] text-[#1e232e] transition-colors outline-none focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
                             >
                               <option value="1">1학년</option>
                               <option value="2">2학년</option>
@@ -447,7 +447,7 @@ function MyPage() {
                               onChange={(e) =>
                                 setProfileForm((prev) => ({ ...prev, email: e.target.value }))
                               }
-                              className="w-full rounded-[6px] border border-[#e6e9ef] bg-[#f8f9fb] px-3 py-2 text-[15px] text-[#5d6676] outline-none"
+                              className="w-full rounded-[6px] border border-[#c5cedd] bg-[#f8f9fb] px-3 py-2 text-[15px] text-[#5d6676] outline-none"
                               readOnly
                             />
                             <p className="mt-1 text-[12px] text-[#7a8497]">
@@ -457,7 +457,7 @@ function MyPage() {
                         </div>
 
                         {/* 오른쪽 열: 관심 분야 */}
-                        <div className="rounded-lg border border-[#e6e9ef] bg-[#fafbfc] p-5">
+                        <div className="rounded-lg border border-[#c5cedd] bg-[#fafbfc] p-5">
                           <label className="mb-4 block text-[14px] font-semibold text-[#1e232e]">
                             관심 분야{' '}
                             <span className="text-[12px] font-normal text-[#7a8497]">
@@ -478,7 +478,7 @@ function MyPage() {
                                         key={item}
                                         className={`inline-flex cursor-pointer items-center rounded-md border px-3 py-1.5 text-[12px] font-medium transition-all ${
                                           isChecked
-                                            ? 'border-[#0b3aa2] bg-[#0b3aa2] text-white shadow-sm'
+                                            ? 'border-[#0b3aa2] bg-[#0b3aa2] text-white'
                                             : 'border-[#d3d8e0] bg-white text-[#5d6676] hover:border-[#0b3aa2] hover:bg-[#f0f6ff]'
                                         }`}
                                       >
@@ -540,12 +540,12 @@ function MyPage() {
             // 프로필 탭: 알림 설정
             <aside className="hidden lg:block lg:w-[280px] xl:w-[320px]">
               <div className="sticky top-6">
-                <section className="rounded-[6px] border border-[#e6e9ef] bg-white shadow-sm">
-                  <div className="border-b border-[#e6e9ef] px-4 py-3">
+                <section className="rounded-[6px] border border-[#c5cedd] bg-white">
+                  <div className="border-b border-[#c5cedd] px-4 py-3">
                     <h2 className="text-[14px] font-semibold text-[#1e232e]">🔔 알림 설정</h2>
                   </div>
                   <div className="px-4 py-3">
-                    <div className="mb-3 border-b border-[#e6e9ef] pb-3">
+                    <div className="mb-3 border-b border-[#c5cedd] pb-3">
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-between">
                           <p className="text-[13px] font-medium text-[#1e232e]">오늘의 추천!</p>
@@ -623,7 +623,7 @@ function MyPage() {
           onClick={() => setShowSaveSuccess(false)}
         >
           <div
-            className="flex items-center gap-3 rounded-[8px] border border-[#0b3aa2] bg-white px-4 py-3 shadow-lg"
+            className="flex items-center gap-3 rounded-[8px] border border-[#0b3aa2] bg-white px-4 py-3"
             onClick={(e) => e.stopPropagation()}
           >
             <svg viewBox="0 0 20 20" aria-hidden="true" className="h-5 w-5 shrink-0 text-[#0b3aa2]">

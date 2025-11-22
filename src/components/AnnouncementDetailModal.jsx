@@ -49,7 +49,7 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
         onClick={onClose}
       >
         <div
-          className="max-h-[80vh] w-full max-w-[520px] rounded-2xl bg-white p-6 shadow-xl"
+          className="max-h-[80vh] w-full max-w-[520px] rounded-2xl border border-[#c5cedd] bg-white p-6"
           onClick={(event) => event.stopPropagation()}
         >
           <div className="flex items-center justify-center py-8">
@@ -69,7 +69,7 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
         onClick={onClose}
       >
         <div
-          className="max-h-[80vh] w-full max-w-[520px] rounded-2xl bg-white p-6 shadow-xl"
+          className="max-h-[80vh] w-full max-w-[520px] rounded-2xl border border-[#c5cedd] bg-white p-6"
           onClick={(event) => event.stopPropagation()}
         >
           <div className="flex items-center justify-center py-8">
@@ -119,11 +119,11 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
       onClick={onClose}
     >
       <div
-        className="max-h-[85vh] w-full max-w-[640px] overflow-y-auto rounded-2xl bg-white shadow-xl transition-transform"
+        className="max-h-[85vh] w-full max-w-[640px] overflow-y-auto rounded-2xl border border-[#c5cedd] bg-white transition-transform"
         onClick={(event) => event.stopPropagation()}
       >
         {/* 헤더 */}
-        <div className="sticky top-0 z-10 border-b border-[#e6e9ef] bg-white px-6 py-4">
+        <div className="sticky top-0 z-10 border-b border-[#c5cedd] bg-white px-6 py-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               {category && (
@@ -156,7 +156,7 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
         <div className="px-6 py-5">
           {/* 요약 */}
           {summary && (
-            <div className="mb-6 rounded-xl border border-[#e6e9ef] bg-[#f8f9fb] p-4">
+            <div className="mb-6 rounded-xl border border-[#c5cedd] bg-[#f8f9fb] p-4">
               <div className="markdown-content text-[14px] leading-[1.7] text-[#1e232e]">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
@@ -235,7 +235,7 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
                     ),
                     // 구분선
                     hr: ({ node, ...props }) => (
-                      <hr className="my-3 border-t border-[#e6e9ef]" {...props} />
+                      <hr className="my-3 border-t border-[#c5cedd]" {...props} />
                     ),
                   }}
                 >
@@ -248,7 +248,7 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
           {/* 주요 정보 그리드 */}
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {/* 작성일 */}
-            <div className="rounded-lg border border-[#e6e9ef] bg-white p-4">
+            <div className="rounded-lg border border-[#c5cedd] bg-white p-4">
               <dt className="mb-1 text-[12px] font-semibold text-[#7a8497]">작성일</dt>
               <dd className="text-[14px] font-medium text-[#1e232e]">{postedAt ?? '-'}</dd>
             </div>
@@ -261,7 +261,7 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
 
             {/* 단과대학 */}
             {college && college !== 'Dummy College' && (
-              <div className="rounded-lg border border-[#e6e9ef] bg-white p-4">
+              <div className="rounded-lg border border-[#c5cedd] bg-white p-4">
                 <dt className="mb-1 text-[12px] font-semibold text-[#7a8497]">단과대학</dt>
                 <dd className="text-[14px] font-medium text-[#1e232e]">{college}</dd>
               </div>
@@ -270,7 +270,7 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
             {/* 학과/부서 */}
             {department && (
               <div
-                className={`rounded-lg border border-[#e6e9ef] bg-white p-4 ${
+                className={`rounded-lg border border-[#c5cedd] bg-white p-4 ${
                   !college || college === 'Dummy College' ? 'sm:col-span-2' : ''
                 }`}
               >
@@ -281,7 +281,7 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
 
             {/* 대상 학년 */}
             {audience_grade && audience_grade.length > 0 && (
-              <div className="rounded-lg border border-[#e6e9ef] bg-white p-4">
+              <div className="rounded-lg border border-[#c5cedd] bg-white p-4">
                 <dt className="mb-2 text-[12px] font-semibold text-[#7a8497]">대상 학년</dt>
                 <dd className="flex flex-wrap gap-2">
                   {audience_grade.map((grade) => (
@@ -297,7 +297,7 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
             )}
 
             {/* 좋아요 수 */}
-            <div className="rounded-lg border border-[#e6e9ef] bg-white p-4">
+            <div className="rounded-lg border border-[#c5cedd] bg-white p-4">
               <dt className="mb-1 text-[12px] font-semibold text-[#7a8497]">좋아요</dt>
               <dd className="flex items-center gap-1 text-[14px] font-medium text-[#1e232e]">
                 <svg className="h-4 w-4 text-[#c73531]" fill="currentColor" viewBox="0 0 20 20">
@@ -380,7 +380,7 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
 
           {/* 원본 링크 */}
           {url && (
-            <div className="border-t border-[#e6e9ef] pt-4">
+            <div className="border-t border-[#c5cedd] pt-4">
               <a
                 href={url}
                 target="_blank"
