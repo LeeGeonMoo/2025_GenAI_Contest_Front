@@ -24,7 +24,11 @@ function TopRecommendations({ onSelectAnnouncement, favorites, onToggleFavorite,
       }
 
       const randomPage = Math.floor(Math.random() * 5) + 1;
-      const randomData = await getFeed({ page: randomPage, page_size: 20 });
+      const randomData = await getFeed({
+        page: randomPage,
+        page_size: 20,
+        exclude_user_id: CURRENT_USER_ID,
+      });
       if (randomData.items && randomData.items.length > 0) {
         const randomIndex = Math.floor(Math.random() * randomData.items.length);
         results.push({

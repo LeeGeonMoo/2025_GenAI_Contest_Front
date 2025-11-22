@@ -108,9 +108,6 @@ function LikeRecommendationSidebar({ onSelectAnnouncement, favorites, onToggleFa
             ))}
           </div>
         </div>
-
-        {/* 힌트 */}
-        <p className="mt-3 px-2 text-[11px] text-[#9aa3b2]">🏆 좋아요한 공지 기반 Top 5 추천</p>
       </div>
     </aside>
   );
