@@ -22,7 +22,11 @@ function LikeRecommendationSidebar({ onSelectAnnouncement, favorites, onToggleFa
         const transformed = data.items.map(transformAnnouncement);
         console.log(
           '좋아요 기반 추천 로드:',
-          transformed.map((t) => ({ id: t.id, title: t.title })),
+          transformed.map((t) => ({
+            id: t.id,
+            title: t.title,
+            reason: t.reason || t.recommendation_reason || t.rank_reason,
+          })),
         );
         setRecommendations(transformed);
       } else {
@@ -116,6 +120,8 @@ function LikeRecommendationSidebar({ onSelectAnnouncement, favorites, onToggleFa
 function RecommendationCard({ rank, announcement, onSelect, isFavorite, onToggleFavorite }) {
   // Top 3는 강조
   const isTop3 = rank <= 3;
+  const reasonText = getRecommendationReason(announcement);
+  const deadlineLabel = formatDeadlineLabel(announcement.deadline);
 
   return (
     <div className="group w-full border-l-4 border-transparent p-4 transition-all hover:border-l-[#0b3aa2] hover:bg-[#fafbfc]">
@@ -133,11 +139,25 @@ function RecommendationCard({ rank, announcement, onSelect, isFavorite, onToggle
         <div className="min-w-0 flex-1">
           {/* 상단: 카테고리 + 좋아요 */}
           <div className="mb-1.5 flex items-start justify-between gap-2">
-            {announcement.category && (
-              <span className="inline-flex rounded-md border border-[#e0e5ef] bg-[#f4f6fc] px-2 py-0.5 text-[10px] font-semibold text-[#526080]">
-                {announcement.category}
-              </span>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {announcement.category && (
+                <span className="inline-flex rounded-md border border-[#e0e5ef] bg-[#f4f6fc] px-2 py-0.5 text-[10px] font-semibold text-[#526080]">
+                  {announcement.category}
+                </span>
+              )}
+              {deadlineLabel && (
+                <span className="inline-flex items-center gap-0.5 rounded-md bg-[#fff4f3] px-2 py-0.5 text-[10px] font-semibold text-[#c73531]">
+                  <svg viewBox="0 0 20 20" className="h-3 w-3" fill="currentColor">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  {deadlineLabel}
+                </span>
+              )}
+            </div>
             <HeartButton
               active={isFavorite}
               onToggle={(e) => {
@@ -156,7 +176,7 @@ function RecommendationCard({ rank, announcement, onSelect, isFavorite, onToggle
             className="w-full cursor-pointer text-left"
           >
             <h3
-              className={`mb-2 line-clamp-2 text-[14px] leading-snug transition-colors group-hover:text-[#0b3aa2] ${isTop3 ? 'font-bold' : 'font-semibold'}`}
+              className={`line-clamp-2 text-[14px] leading-snug transition-colors group-hover:text-[#0b3aa2] ${isTop3 ? 'font-bold' : 'font-semibold'}`}
             >
               {announcement.title}
             </h3>
@@ -171,24 +191,48 @@ function RecommendationCard({ rank, announcement, onSelect, isFavorite, onToggle
                   <span className="truncate">{announcement.department}</span>
                 </span>
               )}
-              {announcement.deadline && (
-                <span className="flex items-center gap-0.5 font-semibold text-[#c73531]">
-                  <svg viewBox="0 0 20 20" className="h-3 w-3 shrink-0" fill="currentColor">
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  ~ {announcement.deadline}
-                </span>
-              )}
             </div>
           </button>
+
+          {reasonText && <p className="text-[11px] leading-relaxed text-[#5d6676]">{reasonText}</p>}
         </div>
       </div>
     </div>
   );
+}
+
+function getRecommendationReason(announcement) {
+  const tryResolve = (value) => {
+    if (!value) return null;
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    }
+    if (typeof value === 'object') {
+      return (
+        tryResolve(value.reason) ||
+        tryResolve(value.summary) ||
+        tryResolve(value.text) ||
+        tryResolve(value.detail) ||
+        (Array.isArray(value.messages) ? tryResolve(value.messages.join(' ')) : null)
+      );
+    }
+    return null;
+  };
+
+  return (
+    tryResolve(announcement.reason) ||
+    tryResolve(announcement.recommendation_reason) ||
+    tryResolve(announcement.recommend_reason) ||
+    tryResolve(announcement.rank_reason)
+  );
+}
+
+function formatDeadlineLabel(deadline) {
+  if (!deadline) return '';
+  const trimmed = deadline.trim();
+  if (!trimmed) return '';
+  return trimmed.startsWith('~') ? trimmed : `~ ${trimmed}`;
 }
 
 // 스켈레톤

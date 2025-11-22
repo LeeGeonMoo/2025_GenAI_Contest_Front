@@ -130,6 +130,7 @@ function RecommendationCard({ announcement, type, onSelect, isFavorite, onToggle
   const badgeClass = isProfile
     ? 'bg-[#0b3aa2] text-white border-[#0b3aa2]'
     : 'bg-[#c73864] text-white border-[#c73864]';
+  const deadlineLabel = formatDeadlineLabel(announcement.deadline);
 
   return (
     <div
@@ -177,7 +178,7 @@ function RecommendationCard({ announcement, type, onSelect, isFavorite, onToggle
                 <span className="truncate">{announcement.department}</span>
               </span>
             )}
-            {announcement.deadline && (
+            {deadlineLabel && (
               <span className="flex items-center gap-0.5 font-semibold text-[#c73531]">
                 <svg viewBox="0 0 20 20" className="h-3 w-3 shrink-0" fill="currentColor">
                   <path
@@ -186,7 +187,7 @@ function RecommendationCard({ announcement, type, onSelect, isFavorite, onToggle
                     clipRule="evenodd"
                   />
                 </svg>
-                ~ {announcement.deadline}
+                {deadlineLabel}
               </span>
             )}
           </div>
@@ -206,6 +207,13 @@ function SkeletonCard() {
       <div className="h-3 w-24 animate-pulse rounded bg-[#e6e9ef]" />
     </div>
   );
+}
+
+function formatDeadlineLabel(deadline) {
+  if (!deadline) return '';
+  const trimmed = deadline.trim();
+  if (!trimmed) return '';
+  return trimmed.startsWith('~') ? trimmed : `~ ${trimmed}`;
 }
 
 export default TopRecommendations;
