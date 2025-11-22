@@ -48,6 +48,7 @@ const INTEREST_CATEGORIES = {
 function MyPage() {
   const [activeTab, setActiveTab] = useState('activities'); // 'activities' or 'profile'
   const [likedNotices, setLikedNotices] = useState([]);
+  const [favoriteIds, setFavoriteIds] = useState(() => new Set());
   const [recommendEmail, setRecommendEmail] = useState(null); // null로 초기화하여 로딩 완료 전까지 애니메이션 방지
   const [deadlineAlert, setDeadlineAlert] = useState(null);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
@@ -84,12 +85,22 @@ function MyPage() {
         setLikedNotices((prev) =>
           prev.map((item) => (item.id === id ? { ...item, liked: false } : item)),
         );
+        setFavoriteIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
       } else {
         // 좋아요 추가 - 로컬 상태만 업데이트
         await likePost(CURRENT_USER_ID, id);
         setLikedNotices((prev) =>
           prev.map((item) => (item.id === id ? { ...item, liked: true } : item)),
         );
+        setFavoriteIds((prev) => {
+          const next = new Set(prev);
+          next.add(id);
+          return next;
+        });
       }
     } catch (error) {
       console.error('Error toggling like:', error);
@@ -99,10 +110,7 @@ function MyPage() {
 
   // 범용 좋아요 토글 (추천 공지용 - favorites Set 기반)
   const toggleFavorite = async (id) => {
-    const currentFavorites = new Set(
-      likedNotices.filter((item) => item.liked).map((item) => item.id),
-    );
-    const isLiked = currentFavorites.has(id);
+    const isLiked = favoriteIds.has(id);
 
     try {
       if (isLiked) {
@@ -111,12 +119,22 @@ function MyPage() {
         setLikedNotices((prev) =>
           prev.map((item) => (item.id === id ? { ...item, liked: false } : item)),
         );
+        setFavoriteIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
       } else {
         await likePost(CURRENT_USER_ID, id);
         // likedNotices에 있다면 업데이트
         setLikedNotices((prev) =>
           prev.map((item) => (item.id === id ? { ...item, liked: true } : item)),
         );
+        setFavoriteIds((prev) => {
+          const next = new Set(prev);
+          next.add(id);
+          return next;
+        });
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);
@@ -139,6 +157,7 @@ function MyPage() {
       const data = await getUserLikes(CURRENT_USER_ID, { page, page_size: pageSize });
       const transformedItems = data.items.map(transformLikedAnnouncement);
       setLikedNotices(transformedItems);
+      setFavoriteIds(new Set(transformedItems.filter((item) => item.liked).map((item) => item.id)));
       setTotalLikedItems(data.meta.total);
       setTotalLikedPages(data.meta.total_pages);
     } catch (error) {
@@ -280,7 +299,7 @@ function MyPage() {
                 </div>
                 <AnnouncementList
                   announcements={likedNotices}
-                  isFavorite={(item) => item.liked}
+                  isFavorite={(item) => favoriteIds.has(item.id)}
                   onToggleFavorite={(item) => toggleLikedNotice(item.id)}
                   onSelectAnnouncement={(item) => setSelectedPostId(item.id)}
                   getSources={(item) => {
@@ -533,7 +552,7 @@ function MyPage() {
             // 관심 활동 탭: 좋아요 기반 추천
             <LikeRecommendationSidebar
               onSelectAnnouncement={(announcement) => setSelectedPostId(announcement.id)}
-              favorites={new Set(likedNotices.filter((item) => item.liked).map((item) => item.id))}
+              favorites={favoriteIds}
               onToggleFavorite={toggleFavorite}
             />
           ) : (
