@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { sendChatMessage } from '../api/chat';
 import { getUser } from '../api/users';
 import { CURRENT_USER_ID } from '../config/constants';
@@ -36,11 +38,12 @@ function ChatWidget({ isOpen, onClose }) {
 
   // 드래그 및 리사이즈 상태
   const [position, setPosition] = useState(() => {
-    // 초기 위치: 우측 하단
+    // 초기 위치: 우측 하단 (화면 끝에서 24px, 바닥에서 0px)
+    // translate-y-full 때문에 처음에는 화면 아래에 숨겨져 있음
     if (typeof window !== 'undefined') {
       return {
-        x: window.innerWidth - 420 - 24, // 우측에서 24px 떨어진 위치
-        y: window.innerHeight - 600, // 하단에 붙임
+        x: window.innerWidth - 420 - 24,
+        y: window.innerHeight - 600,
       };
     }
     return { x: 0, y: 0 };
@@ -247,6 +250,10 @@ function ChatWidget({ isOpen, onClose }) {
         grade: userInfo?.grade || null,
       });
 
+      // 디버깅: 응답 확인
+      console.log('챗봇 응답:', response);
+      console.log('answer 내용:', response.answer);
+
       const botMessage = {
         id: Date.now() + 1,
         type: 'bot',
@@ -278,25 +285,23 @@ function ChatWidget({ isOpen, onClose }) {
       {/* 채팅 창 */}
       <div
         ref={widgetRef}
-        className={`fixed z-50 flex flex-col rounded-[16px] bg-white shadow-2xl transition-transform duration-300 ease-out ${
-          isOpen ? 'translate-y-0' : 'pointer-events-none translate-y-full'
+        className={`fixed z-50 flex flex-col rounded-[16px] border border-[#c5cedd] bg-white transition-transform duration-300 ease-out ${
+          isOpen ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-[20px] opacity-0'
         } ${isDragging ? 'cursor-move' : ''}`}
         style={{
-          right: isOpen ? undefined : '24px',
-          bottom: isOpen ? undefined : 0,
-          left: isOpen ? `${position.x}px` : undefined,
-          top: isOpen ? `${position.y}px` : undefined,
+          left: `${position.x}px`,
+          top: `${position.y}px`,
           width: `${size.width}px`,
           height: `${size.height}px`,
         }}
       >
         {/* 헤더 */}
         <div
-          className="flex cursor-move items-center justify-between border-b border-[#e6e9ef] px-4 py-3 select-none"
+          className="flex cursor-move items-center justify-between border-b border-[#c5cedd] px-4 py-3 select-none"
           onMouseDown={handleMouseDown}
         >
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#4f8cff] to-[#1b45b0]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1b45b0]">
               <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 text-white">
                 <path
                   d="M5.5 4h13a.5.5 0 0 1 .5.5V18a.5.5 0 0 1-.8.4l-3.86-2.9a.5.5 0 0 0-.3-.1h-8.54a.5.5 0 0 1-.5-.5V4.5a.5.5 0 0 1 .5-.5Z"
@@ -340,9 +345,97 @@ function ChatWidget({ isOpen, onClose }) {
                       : 'bg-[#f1f4f9] text-[#1e232e]'
                   }`}
                 >
-                  <p className="text-[14px] leading-relaxed whitespace-pre-wrap">
-                    {message.content}
-                  </p>
+                  {message.type === 'user' ? (
+                    <p className="text-[14px] leading-relaxed whitespace-pre-wrap">
+                      {message.content}
+                    </p>
+                  ) : (
+                    <div className="markdown-content text-[14px] leading-[1.7]">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          // 링크 처리 - 짧게 표시하고 하이퍼링크 적용
+                          a: ({ node, children, href, ...props }) => {
+                            const displayText =
+                              typeof children[0] === 'string' && children[0].length > 50
+                                ? children[0].substring(0, 50) + '...'
+                                : children;
+                            return (
+                              <a
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="break-all text-[#0b3aa2] underline hover:text-[#0a3490]"
+                                title={href}
+                                {...props}
+                              >
+                                {displayText}
+                              </a>
+                            );
+                          },
+                          // 단락
+                          p: ({ node, ...props }) => <p className="mb-3 last:mb-0" {...props} />,
+                          // 리스트 - 간격과 들여쓰기 최적화
+                          ul: ({ node, ...props }) => (
+                            <ul
+                              className="mb-3 ml-4 list-outside list-disc space-y-1.5 [&_ul]:mt-1 [&_ul]:mb-0 [&_ul]:ml-4"
+                              {...props}
+                            />
+                          ),
+                          ol: ({ node, ...props }) => (
+                            <ol
+                              className="mb-3 ml-4 list-outside list-decimal space-y-1.5 [&_ol]:mt-1 [&_ol]:mb-0 [&_ol]:ml-4"
+                              {...props}
+                            />
+                          ),
+                          li: ({ node, ...props }) => (
+                            <li className="pl-1.5 [&>p]:mb-1 [&>p]:last:mb-0" {...props} />
+                          ),
+                          // Blockquote 추가
+                          blockquote: ({ node, ...props }) => (
+                            <blockquote
+                              className="my-2 border-l-4 border-[#0b3aa2] bg-[#e8eef7] py-2 pl-3 text-[#4a5568] italic"
+                              {...props}
+                            />
+                          ),
+                          // 코드
+                          code: ({ node, inline, ...props }) =>
+                            inline ? (
+                              <code
+                                className="rounded bg-[#e1e6ed] px-1.5 py-0.5 font-mono text-[13px]"
+                                {...props}
+                              />
+                            ) : (
+                              <code
+                                className="my-2 block overflow-x-auto rounded bg-[#e1e6ed] p-2 font-mono text-[13px]"
+                                {...props}
+                              />
+                            ),
+                          // 강조
+                          strong: ({ node, ...props }) => (
+                            <strong className="font-semibold text-[#1e232e]" {...props} />
+                          ),
+                          em: ({ node, ...props }) => <em className="italic" {...props} />,
+                          // 제목
+                          h1: ({ node, ...props }) => (
+                            <h1 className="mt-3 mb-2 text-base font-bold" {...props} />
+                          ),
+                          h2: ({ node, ...props }) => (
+                            <h2 className="mt-2 mb-2 text-[15px] font-bold" {...props} />
+                          ),
+                          h3: ({ node, ...props }) => (
+                            <h3 className="mt-2 mb-1 text-[14px] font-semibold" {...props} />
+                          ),
+                          // 구분선
+                          hr: ({ node, ...props }) => (
+                            <hr className="my-3 border-t border-[#c5cedd]" {...props} />
+                          ),
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -364,7 +457,7 @@ function ChatWidget({ isOpen, onClose }) {
         </div>
 
         {/* 입력 영역 */}
-        <div className="border-t border-[#e6e9ef] p-4">
+        <div className="border-t border-[#c5cedd] p-4">
           <form onSubmit={handleSend} className="flex gap-2">
             <input
               ref={inputRef}
@@ -372,7 +465,7 @@ function ChatWidget({ isOpen, onClose }) {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="메시지를 입력하세요..."
-              className="flex-1 rounded-[8px] border border-[#e6e9ef] px-4 py-2.5 text-[14px] text-[#1e232e] transition-colors outline-none placeholder:text-[#9aa3b2] focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
+              className="flex-1 rounded-[8px] border border-[#c5cedd] px-4 py-2.5 text-[14px] text-[#1e232e] transition-colors outline-none placeholder:text-[#9aa3b2] focus:border-[#0b3aa2] focus:ring-1 focus:ring-[#0b3aa2]"
             />
             <button
               type="submit"

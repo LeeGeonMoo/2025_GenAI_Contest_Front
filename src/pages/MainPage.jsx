@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import AnnouncementList from '../components/AnnouncementList';
 import AnnouncementDetailModal from '../components/AnnouncementDetailModal';
-import { getFeed, getRecoUser } from '../api/feed';
+import TopRecommendations from '../components/TopRecommendations';
+import { getFeed } from '../api/feed';
 import { search as searchAPI } from '../api/search';
 import { likePost, unlikePost } from '../api/likes';
 import { getUserLikes } from '../api/users';
@@ -10,8 +11,6 @@ import { CURRENT_USER_ID } from '../config/constants';
 import { transformAnnouncement } from '../utils/transformAnnouncement';
 
 function MainPage() {
-  const navigate = useNavigate();
-
   // 사용하고 있는 state 선언
   const [categories, setCategories] = useState([
     '전체',
@@ -21,7 +20,6 @@ function MainPage() {
     '채용',
     '대외활동',
     '기타',
-    '추천',
   ]);
   const [announcements, setAnnouncements] = useState([]);
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
@@ -178,32 +176,12 @@ function MainPage() {
     setIsLoading(true);
     setFetchError(null);
     try {
-      let data;
-
-      // '추천' 카테고리인 경우 getRecoUser 호출
-      if (category === '추천') {
-        data = await getRecoUser({
-          user_id: CURRENT_USER_ID,
-          limit: 10, // 현재 나오는건 10개로
-        });
-
-        // 디버깅용: semantic_score 출력
-        console.log(
-          '추천 탭 semantic scores:',
-          data.items.map((item) => ({
-            id: item.id,
-            title: item.title,
-            semantic_score: item.semantic_score,
-          })),
-        );
-      } else {
-        // 일반 카테고리
-        data = await getFeed({
-          category: category === '전체' || !category ? null : category,
-          page,
-          page_size: pageSize,
-        });
-      }
+      // 일반 카테고리
+      const data = await getFeed({
+        category: category === '전체' || !category ? null : category,
+        page,
+        page_size: pageSize,
+      });
 
       const transformedItems = data.items.map(transformAnnouncement);
       setAnnouncements(transformedItems);
@@ -213,10 +191,8 @@ function MainPage() {
       // 현재 페이지의 항목들에 대한 좋아요 상태 확인
       updateFavoritesForCurrentPage(transformedItems);
 
-      // 전체 출처 목록 수집 (여러 페이지에서 수집) - 추천 탭이 아닐 때만
-      if (category !== '추천') {
-        await collectAllSources(category);
-      }
+      // 전체 출처 목록 수집 (여러 페이지에서 수집)
+      await collectAllSources(category);
     } catch (error) {
       console.error('Failed to load feed:', error);
       setFetchError('데이터를 불러오지 못했습니다.');
@@ -384,19 +360,12 @@ function MainPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="mx-auto w-full max-w-[1100px] px-6 pt-9 pb-20">
-        <header className="mb-6 border-b border-[#e6e9ef] pt-[10px] pb-[14px]">
+      <div className="mx-auto w-full max-w-[1280px] px-6 pt-9 pb-20">
+        <header className="mb-6 border-b border-[#c5cedd] pt-[10px] pb-[14px]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <button
-              type="button"
-              onClick={() => {
-                // 전체 페이지 리로드로 초기화
-                window.location.href = '/';
-              }}
-              className="text-[21px] font-semibold tracking-[-0.2px] text-[#0b3aa2]"
-            >
+            <Link to="/" className="text-[21px] font-semibold tracking-[-0.2px] text-[#0b3aa2]">
               NotiSNU
-            </button>
+            </Link>
             <div className="flex items-center gap-3 text-[15px] text-[#5d6676]">
               <span>
                 <span className="font-semibold text-[#1e232e]">이건무</span> 님 환영합니다
@@ -410,205 +379,194 @@ function MainPage() {
             </div>
           </div>
         </header>
+        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <div className="space-y-4">
+            <nav className="rounded-[8px] border border-[#c5cedd] px-4 py-3">
+              <div className="flex flex-wrap gap-4 text-[15px] font-medium text-[#5d6676]">
+                {categories.map((item, index) => {
+                  const isActive = index === activeCategoryIndex;
+                  const classes = [
+                    'pb-1 transition-colors',
+                    isActive
+                      ? 'border-b-2 border-[#0b3aa2] text-[#0b3aa2]'
+                      : 'hover:text-[#1e232e]',
+                  ]
+                    .filter(Boolean)
+                    .join(' ');
+                  return (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => setActiveCategoryIndex(index)}
+                      className={classes}
+                      aria-pressed={isActive}
+                    >
+                      {item}
+                    </button>
+                  );
+                })}
+              </div>
+            </nav>
 
-        <nav className="border-b border-[#e6e9ef] pb-3">
-          <div className="flex flex-wrap gap-4 text-[15px] font-medium text-[#5d6676]">
-            {categories.map((item, index) => {
-              const isActive = index === activeCategoryIndex;
-              const isRecommended = item === '추천';
-              const classes = [
-                'pb-2 transition-colors',
-                isActive ? 'border-b-2 border-[#0b3aa2] text-[#0b3aa2]' : 'hover:text-[#1e232e]',
-                isRecommended
-                  ? 'flex items-center gap-1.5'
-                  : '' /* 별 표시 추가 때문에 추가 가운데 정렬 추가되는 부분 */,
-              ]
-                .filter(Boolean)
-                .join(' ');
-              return (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setActiveCategoryIndex(index)}
-                  className={classes}
-                  aria-pressed={isActive}
-                >
-                  {isRecommended /* 별 표시 추가하는 부분 */ ? (
-                    <span className="flex items-center gap-1.5">
-                      <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4">
-                        <path
-                          d="m8 1.5 1.75 4.3 4.75.28-3.7 3.03 1.16 4.63L8 11.46l-3.96 2.28 1.16-4.63-3.7-3.03 4.75-.28L8 1.5Z"
-                          fill={isActive ? 'currentColor' : '#9aa3b2'}
-                        />
-                      </svg>
-                      추천
-                    </span>
-                  ) : (
-                    item
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </nav>
-
-        <section className="mt-6 rounded-[6px] border border-[#e6e9ef] bg-white p-4 shadow-sm">
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_240px]">
-            <div className="flex items-center gap-3 rounded-[6px] border border-[#e6e9ef] px-3 py-2">
-              <span className="inline-flex h-5 w-5 items-center justify-center text-[#5d6676]">
-                <svg viewBox="0 0 20 20" aria-hidden="true" className="h-5 w-5">
-                  <path
-                    d="m17.5 16.09-3.63-3.63a5.83 5.83 0 1 0-1.41 1.41l3.63 3.63a1 1 0 0 0 1.41-1.41ZM4.85 9.08a4.23 4.23 0 1 1 4.23 4.23 4.23 4.23 0 0 1-4.23-4.23Z"
-                    fill="currentColor"
+            <section className="rounded-[6px] border border-[#c5cedd] bg-white p-4">
+              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
+                <div className="flex items-center gap-3 rounded-[6px] border border-[#c5cedd] px-3 py-2">
+                  <span className="inline-flex h-5 w-5 items-center justify-center text-[#5d6676]">
+                    <svg viewBox="0 0 20 20" aria-hidden="true" className="h-5 w-5">
+                      <path
+                        d="m17.5 16.09-3.63-3.63a5.83 5.83 0 1 0-1.41 1.41l3.63 3.63a1 1 0 0 0 1.41-1.41ZM4.85 9.08a4.23 4.23 0 1 1 4.23 4.23 4.23 4.23 0 0 1-4.23-4.23Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </span>
+                  <input
+                    type="search"
+                    placeholder="공고명, 키워드 검색"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSearch();
+                      }
+                    }}
+                    className="w-full bg-transparent text-[15px] font-medium text-[#1e232e] outline-none placeholder:text-[#9aa3b2]"
                   />
-                </svg>
-              </span>
-              <input
-                type="search"
-                placeholder="공고명, 키워드 검색"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleSearch();
-                  }
-                }}
-                className="w-full bg-transparent text-[15px] font-medium text-[#1e232e] outline-none placeholder:text-[#9aa3b2]"
-              />
-            </div>
-            <div className="relative">
-              <label className="mb-1 block text-[13px] font-medium text-[#5d6676]">
-                공지 출처 (포스팅된 곳)
-              </label>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsSourceDropdownOpen(!isSourceDropdownOpen);
-                }}
-                className="flex w-full items-center justify-between rounded-[6px] border border-[#e6e9ef] px-3 py-2 text-left text-[14px] font-medium text-[#1e232e] transition-colors hover:bg-[#f8f9fb]"
-                aria-expanded={isSourceDropdownOpen}
-                aria-haspopup="listbox"
-              >
-                <span className={selectedSources.size === 0 ? 'text-[#9aa3b2]' : ''}>
-                  {getSourceButtonText()}
-                </span>
-                <svg
-                  viewBox="0 0 20 20"
-                  aria-hidden="true"
-                  className={`h-5 w-5 text-[#7a8497] transition-transform ${
-                    isSourceDropdownOpen ? 'rotate-90' : ''
-                  }`}
-                >
-                  <path
-                    d="M7.5 5.75a.75.75 0 0 1 1.28-.53l3 3a.75.75 0 0 1 0 1.06l-3 3A.75.75 0 0 1 7.5 11.5l2.47-2.47L7.5 6.56A.75.75 0 0 1 7.5 5.75Z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </button>
-              {isSourceDropdownOpen && (
-                <div
-                  className="absolute z-10 mt-1 w-full rounded-[6px] border border-[#e6e9ef] bg-white shadow-lg"
-                  role="listbox"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="max-h-[200px] overflow-y-auto p-2">
-                    {allSources.length > 0 ? (
-                      allSources.map((sourceName) => {
-                        const isChecked = selectedSources.has(sourceName);
-                        return (
-                          <label
-                            key={sourceName}
-                            className="flex cursor-pointer items-center gap-2 rounded-[4px] px-2 py-1.5 text-[14px] text-[#1e232e] transition-colors hover:bg-[#f8f9fb]"
-                            role="option"
-                            aria-selected={isChecked}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={() => toggleSource(sourceName)}
-                              className="h-4 w-4 cursor-pointer rounded border-[#d3d8e0] text-[#0b3aa2] focus:ring-2 focus:ring-[#0b3aa2] focus:ring-offset-0"
-                            />
-                            <span className="flex-1">{sourceName}</span>
-                          </label>
-                        );
-                      })
-                    ) : (
-                      <div className="px-2 py-1.5 text-[14px] text-[#9aa3b2]">출처가 없습니다</div>
-                    )}
-                  </div>
                 </div>
-              )}
-            </div>
+                <div className="relative">
+                  <label className="mb-1 block text-[13px] font-medium text-[#5d6676]">
+                    공지 출처 (포스팅된 곳)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsSourceDropdownOpen(!isSourceDropdownOpen);
+                    }}
+                    className="flex w-full items-center justify-between rounded-[6px] border border-[#c5cedd] px-3 py-2 text-left text-[14px] font-medium text-[#1e232e] transition-colors hover:bg-[#f8f9fb]"
+                    aria-expanded={isSourceDropdownOpen}
+                    aria-haspopup="listbox"
+                  >
+                    <span className={selectedSources.size === 0 ? 'text-[#9aa3b2]' : ''}>
+                      {getSourceButtonText()}
+                    </span>
+                    <svg
+                      viewBox="0 0 20 20"
+                      aria-hidden="true"
+                      className={`h-5 w-5 text-[#7a8497] transition-transform ${
+                        isSourceDropdownOpen ? 'rotate-90' : ''
+                      }`}
+                    >
+                      <path
+                        d="M7.5 5.75a.75.75 0 0 1 1.28-.53l3 3a.75.75 0 0 1 0 1.06l-3 3A.75.75 0 0 1 7.5 11.5l2.47-2.47L7.5 6.56A.75.75 0 0 1 7.5 5.75Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </button>
+                  {isSourceDropdownOpen && (
+                    <div
+                      className="absolute z-10 mt-1 w-full rounded-[6px] border border-[#c5cedd] bg-white"
+                      role="listbox"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="max-h-[200px] overflow-y-auto p-2">
+                        {allSources.length > 0 ? (
+                          allSources.map((sourceName) => {
+                            const isChecked = selectedSources.has(sourceName);
+                            return (
+                              <label
+                                key={sourceName}
+                                className="flex cursor-pointer items-center gap-2 rounded-[4px] px-2 py-1.5 text-[14px] text-[#1e232e] transition-colors hover:bg-[#f8f9fb]"
+                                role="option"
+                                aria-selected={isChecked}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => toggleSource(sourceName)}
+                                  className="h-4 w-4 cursor-pointer rounded border-[#d3d8e0] text-[#0b3aa2] focus:ring-2 focus:ring-[#0b3aa2] focus:ring-offset-0"
+                                />
+                                <span className="flex-1">{sourceName}</span>
+                              </label>
+                            );
+                          })
+                        ) : (
+                          <div className="px-2 py-1.5 text-[14px] text-[#9aa3b2]">
+                            출처가 없습니다
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="mt-6 mb-3 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedSources(new Set());
+                    setIsSearchMode(false);
+                    setCurrentPage(1);
+                    setIsSourceDropdownOpen(false);
+                    const category = activeCategoryIndex === 0 ? null : activeCategory;
+                    loadFeed(category, 1);
+                  }}
+                  className="rounded-[6px] border border-[#c5cedd] px-[12px] py-[7px] text-[14px] font-medium text-[#1e232e] transition-colors hover:bg-[#f8f9fb]"
+                >
+                  초기화
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSearch}
+                  disabled={isLoading}
+                  className="rounded-[6px] border border-[#0b3aa2] bg-[#0b3aa2] px-[12px] py-[7px] text-[14px] font-medium text-white transition-colors hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  검색
+                </button>
+              </div>
+            </section>
           </div>
-          <div className="mt-3 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedSources(new Set());
-                setIsSearchMode(false);
-                setCurrentPage(1);
-                setIsSourceDropdownOpen(false);
-                const category = activeCategoryIndex === 0 ? null : activeCategory;
-                loadFeed(category, 1);
-              }}
-              className="rounded-[6px] border border-[#e6e9ef] px-[12px] py-[7px] text-[14px] font-medium text-[#1e232e] transition-colors hover:bg-[#f8f9fb]"
-            >
-              초기화
-            </button>
-            <button
-              type="button"
-              onClick={handleSearch}
-              disabled={isLoading}
-              className="rounded-[6px] border border-[#0b3aa2] bg-[#0b3aa2] px-[12px] py-[7px] text-[14px] font-medium text-white transition-colors hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              검색
-            </button>
-          </div>
-        </section>
 
-        <div className="mt-6 flex items-center justify-between text-[14px] text-[#5d6676]">
-          <span>
-            {isLoading
-              ? '검색 결과 불러오는 중...'
-              : `검색 결과 ${totalItems}개${
-                  totalPages > 1 ? ` (${currentPage}/${totalPages}페이지)` : ''
-                }`}
-          </span>
+          <TopRecommendations
+            onSelectAnnouncement={(announcement) => setSelectedPostId(announcement.id)}
+            favorites={favorites}
+            onToggleFavorite={toggleFavorite}
+            className="h-full"
+          />
         </div>
 
-        {activeCategory === '추천' /* 추천 탭에서만 위에 간단한 설명 추가*/ ? (
-          <div className="mt-2 flex items-center gap-2 rounded-[6px] border border-[#e3e9f6] bg-[#f8faff] px-3 py-2 text-[13px] text-[#5d6676]">
-            <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4 text-[#0b3aa2]">
-              <path
-                d="m8 1.5 1.75 4.3 4.75.28-3.7 3.03 1.16 4.63L8 11.46l-3.96 2.28 1.16-4.63-3.7-3.03 4.75-.28L8 1.5Z"
-                fill="currentColor"
-              />
-            </svg>
-            사용자의 프로필을 기반으로, NotiSNU가 추천하는 활동들이에요.
-          </div>
-        ) : null}
+        {/* 메인 컨텐츠 */}
+        <div className="">
+          <main className="min-w-0 flex-1">
+            <div className="mb-3 text-[14px] text-[#5d6676]">
+              {isLoading
+                ? '검색 결과 불러오는 중...'
+                : `검색 결과 ${totalItems}개${
+                    totalPages > 1 ? ` (${currentPage}/${totalPages}페이지)` : ''
+                  }`}
+            </div>
 
-        <section className="mt-3 overflow-hidden rounded-[6px] border border-[#e6e9ef] bg-white shadow-sm">
-          <AnnouncementList // 공지리스트를 컴포넌트로 밖으로 싹 뺐음. 각종 state 넘겨주면서.
-            announcements={announcements}
-            favorites={favorites} // favorite 들에 하트 표시 해야해서 state로 정의해야.
-            onToggleFavorite={(item) => toggleFavorite(item.id)}
-            onSelectAnnouncement={(item) => setSelectedPostId(item.id)}
-            loading={isLoading}
-            error={fetchError}
-            emptyMessage="조건에 맞는 공지가 없습니다."
-            showPagination={totalPages > 1}
-            pagination={{
-              currentPage,
-              totalPages,
-              pageSize,
-              total: totalItems,
-              onPageChange: handlePageChange,
-            }}
-          />
-        </section>
+            <section className="overflow-hidden rounded-[6px] border border-[#c5cedd] bg-white">
+              <AnnouncementList
+                announcements={announcements}
+                favorites={favorites}
+                onToggleFavorite={(item) => toggleFavorite(item.id)}
+                onSelectAnnouncement={(item) => setSelectedPostId(item.id)}
+                loading={isLoading}
+                error={fetchError}
+                emptyMessage="조건에 맞는 공지가 없습니다."
+                showPagination={totalPages > 1}
+                pagination={{
+                  currentPage,
+                  totalPages,
+                  pageSize,
+                  total: totalItems,
+                  onPageChange: handlePageChange,
+                }}
+              />
+            </section>
+          </main>
+        </div>
       </div>
       <AnnouncementDetailModal
         open={Boolean(selectedPostId)}

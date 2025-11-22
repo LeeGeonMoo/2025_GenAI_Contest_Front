@@ -8,13 +8,21 @@ import apiClient from './client';
  * @param {number} [params.page_size=20] - 페이지당 항목 수
  * @returns {Promise} API 응답
  */
-export const getFeed = async ({ category = null, page = 1, page_size = 20 } = {}) => {
+export const getFeed = async ({
+  category = null,
+  page = 1,
+  page_size = 20,
+  exclude_user_id = null,
+} = {}) => {
   const params = {};
   if (category) {
     params.category = category;
   }
   params.page = page;
   params.page_size = page_size;
+  if (exclude_user_id) {
+    params.exclude_user_id = exclude_user_id;
+  }
 
   const response = await apiClient.get('/feed', { params });
   return response.data;

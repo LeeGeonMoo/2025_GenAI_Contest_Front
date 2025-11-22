@@ -1,4 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { getPost } from '../api/posts';
 import { transformAnnouncement } from '../utils/transformAnnouncement';
 
@@ -47,7 +49,7 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
         onClick={onClose}
       >
         <div
-          className="max-h-[80vh] w-full max-w-[520px] rounded-2xl bg-white p-6 shadow-xl"
+          className="max-h-[80vh] w-full max-w-[520px] rounded-2xl border border-[#c5cedd] bg-white p-6"
           onClick={(event) => event.stopPropagation()}
         >
           <div className="flex items-center justify-center py-8">
@@ -67,7 +69,7 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
         onClick={onClose}
       >
         <div
-          className="max-h-[80vh] w-full max-w-[520px] rounded-2xl bg-white p-6 shadow-xl"
+          className="max-h-[80vh] w-full max-w-[520px] rounded-2xl border border-[#c5cedd] bg-white p-6"
           onClick={(event) => event.stopPropagation()}
         >
           <div className="flex items-center justify-center py-8">
@@ -117,11 +119,11 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
       onClick={onClose}
     >
       <div
-        className="max-h-[85vh] w-full max-w-[640px] overflow-y-auto rounded-2xl bg-white shadow-xl transition-transform"
+        className="max-h-[85vh] w-full max-w-[640px] overflow-y-auto rounded-2xl border border-[#c5cedd] bg-white transition-transform"
         onClick={(event) => event.stopPropagation()}
       >
         {/* 헤더 */}
-        <div className="sticky top-0 z-10 border-b border-[#e6e9ef] bg-white px-6 py-4">
+        <div className="sticky top-0 z-10 border-b border-[#c5cedd] bg-white px-6 py-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               {category && (
@@ -154,19 +156,99 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
         <div className="px-6 py-5">
           {/* 요약 */}
           {summary && (
-            <div className="mb-6 rounded-xl border border-[#e6e9ef] bg-[#f8f9fb] p-4">
-              <h3 className="mb-2 text-[13px] font-semibold text-[#7a8497]">요약</h3>
-              <div
-                className="text-[14px] leading-relaxed whitespace-pre-line text-[#1e232e]"
-                dangerouslySetInnerHTML={{ __html: summary.replace(/\n/g, '<br />') }}
-              />
+            <div className="mb-6 rounded-xl border border-[#c5cedd] bg-[#f8f9fb] p-4">
+              <div className="markdown-content text-[14px] leading-[1.7] text-[#1e232e]">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    // 링크 처리
+                    a: ({ node, children, href, ...props }) => {
+                      const displayText =
+                        typeof children[0] === 'string' && children[0].length > 50
+                          ? children[0].substring(0, 50) + '...'
+                          : children;
+                      return (
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="break-all text-[#0b3aa2] underline hover:text-[#0a3490]"
+                          title={href}
+                          {...props}
+                        >
+                          {displayText}
+                        </a>
+                      );
+                    },
+                    // 단락
+                    p: ({ node, ...props }) => <p className="mb-3 last:mb-0" {...props} />,
+                    // 리스트
+                    ul: ({ node, ...props }) => (
+                      <ul
+                        className="mb-3 ml-4 list-outside list-disc space-y-1.5 [&_ul]:mt-1 [&_ul]:mb-0 [&_ul]:ml-4"
+                        {...props}
+                      />
+                    ),
+                    ol: ({ node, ...props }) => (
+                      <ol
+                        className="mb-3 ml-4 list-outside list-decimal space-y-1.5 [&_ol]:mt-1 [&_ol]:mb-0 [&_ol]:ml-4"
+                        {...props}
+                      />
+                    ),
+                    li: ({ node, ...props }) => (
+                      <li className="pl-1.5 [&>p]:mb-1 [&>p]:last:mb-0" {...props} />
+                    ),
+                    // Blockquote
+                    blockquote: ({ node, ...props }) => (
+                      <blockquote
+                        className="my-2 border-l-4 border-[#0b3aa2] bg-[#e8eef7] py-2 pl-3 text-[#4a5568] italic"
+                        {...props}
+                      />
+                    ),
+                    // 코드
+                    code: ({ node, inline, ...props }) =>
+                      inline ? (
+                        <code
+                          className="rounded bg-[#e1e6ed] px-1.5 py-0.5 font-mono text-[13px]"
+                          {...props}
+                        />
+                      ) : (
+                        <code
+                          className="my-2 block overflow-x-auto rounded bg-[#e1e6ed] p-2 font-mono text-[13px]"
+                          {...props}
+                        />
+                      ),
+                    // 강조
+                    strong: ({ node, ...props }) => (
+                      <strong className="font-semibold text-[#1e232e]" {...props} />
+                    ),
+                    em: ({ node, ...props }) => <em className="italic" {...props} />,
+                    // 제목
+                    h1: ({ node, ...props }) => (
+                      <h1 className="mt-3 mb-2 text-base font-bold" {...props} />
+                    ),
+                    h2: ({ node, ...props }) => (
+                      <h2 className="mt-2 mb-2 text-[15px] font-bold" {...props} />
+                    ),
+                    h3: ({ node, ...props }) => (
+                      <h3 className="mt-2 mb-1 text-[14px] font-semibold" {...props} />
+                    ),
+                    // 구분선
+                    hr: ({ node, ...props }) => (
+                      <hr className="my-3 border-t border-[#c5cedd]" {...props} />
+                    ),
+                  }}
+                >
+                  {summary}
+                </ReactMarkdown>
+              </div>
             </div>
           )}
 
           {/* 주요 정보 그리드 */}
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {/* 작성일 */}
-            <div className="rounded-lg border border-[#e6e9ef] bg-white p-4">
+            <div className="rounded-lg border border-[#c5cedd] bg-white p-4">
               <dt className="mb-1 text-[12px] font-semibold text-[#7a8497]">작성일</dt>
               <dd className="text-[14px] font-medium text-[#1e232e]">{postedAt ?? '-'}</dd>
             </div>
@@ -178,8 +260,8 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
             </div>
 
             {/* 단과대학 */}
-            {college && (
-              <div className="rounded-lg border border-[#e6e9ef] bg-white p-4">
+            {college && college !== 'Dummy College' && (
+              <div className="rounded-lg border border-[#c5cedd] bg-white p-4">
                 <dt className="mb-1 text-[12px] font-semibold text-[#7a8497]">단과대학</dt>
                 <dd className="text-[14px] font-medium text-[#1e232e]">{college}</dd>
               </div>
@@ -187,7 +269,11 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
 
             {/* 학과/부서 */}
             {department && (
-              <div className="rounded-lg border border-[#e6e9ef] bg-white p-4">
+              <div
+                className={`rounded-lg border border-[#c5cedd] bg-white p-4 ${
+                  !college || college === 'Dummy College' ? 'sm:col-span-2' : ''
+                }`}
+              >
                 <dt className="mb-1 text-[12px] font-semibold text-[#7a8497]">학과/부서</dt>
                 <dd className="text-[14px] font-medium text-[#1e232e]">{department}</dd>
               </div>
@@ -195,7 +281,7 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
 
             {/* 대상 학년 */}
             {audience_grade && audience_grade.length > 0 && (
-              <div className="rounded-lg border border-[#e6e9ef] bg-white p-4">
+              <div className="rounded-lg border border-[#c5cedd] bg-white p-4">
                 <dt className="mb-2 text-[12px] font-semibold text-[#7a8497]">대상 학년</dt>
                 <dd className="flex flex-wrap gap-2">
                   {audience_grade.map((grade) => (
@@ -211,7 +297,7 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
             )}
 
             {/* 좋아요 수 */}
-            <div className="rounded-lg border border-[#e6e9ef] bg-white p-4">
+            <div className="rounded-lg border border-[#c5cedd] bg-white p-4">
               <dt className="mb-1 text-[12px] font-semibold text-[#7a8497]">좋아요</dt>
               <dd className="flex items-center gap-1 text-[14px] font-medium text-[#1e232e]">
                 <svg className="h-4 w-4 text-[#c73531]" fill="currentColor" viewBox="0 0 20 20">
@@ -294,7 +380,7 @@ function AnnouncementDetailModal({ open, onClose, postId }) {
 
           {/* 원본 링크 */}
           {url && (
-            <div className="border-t border-[#e6e9ef] pt-4">
+            <div className="border-t border-[#c5cedd] pt-4">
               <a
                 href={url}
                 target="_blank"
