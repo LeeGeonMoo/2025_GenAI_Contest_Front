@@ -363,16 +363,9 @@ function MainPage() {
       <div className="mx-auto w-full max-w-[1280px] px-6 pt-9 pb-20">
         <header className="mb-6 border-b border-[#e6e9ef] pt-[10px] pb-[14px]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <button
-              type="button"
-              onClick={() => {
-                // 전체 페이지 리로드로 초기화
-                window.location.href = '/';
-              }}
-              className="text-[21px] font-semibold tracking-[-0.2px] text-[#0b3aa2]"
-            >
+            <Link to="/" className="text-[21px] font-semibold tracking-[-0.2px] text-[#0b3aa2]">
               NotiSNU
-            </button>
+            </Link>
             <div className="flex items-center gap-3 text-[15px] text-[#5d6676]">
               <span>
                 <span className="font-semibold text-[#1e232e]">이건무</span> 님 환영합니다
@@ -506,7 +499,7 @@ function MainPage() {
                   )}
                 </div>
               </div>
-              <div className="mt-3 flex justify-end gap-2">
+              <div className="mt-6 mb-3 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -543,7 +536,7 @@ function MainPage() {
         </div>
 
         {/* 메인 컨텐츠 */}
-        <div className="mt-6">
+        <div className="">
           <main className="min-w-0 flex-1">
             <div className="mb-3 text-[14px] text-[#5d6676]">
               {isLoading
