@@ -133,7 +133,7 @@ function RecommendationCard({ announcement, type, onSelect, isFavorite, onToggle
 
   return (
     <div
-      className={`flex h-full flex-col justify-between rounded-2xl border px-4 py-4 text-left transition-all hover:shadow-md ${gradient}`}
+      className={`flex h-full flex-col justify-between rounded-2xl border px-4 py-4 text-left ${gradient}`}
     >
       <div className="flex items-center justify-between gap-2">
         <span
