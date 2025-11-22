@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { sendChatMessage } from '../api/chat';
 import { getUser } from '../api/users';
 import { CURRENT_USER_ID } from '../config/constants';
@@ -247,6 +249,10 @@ function ChatWidget({ isOpen, onClose }) {
         grade: userInfo?.grade || null,
       });
 
+      // 디버깅: 응답 확인
+      console.log('챗봇 응답:', response);
+      console.log('answer 내용:', response.answer);
+
       const botMessage = {
         id: Date.now() + 1,
         type: 'bot',
@@ -340,9 +346,97 @@ function ChatWidget({ isOpen, onClose }) {
                       : 'bg-[#f1f4f9] text-[#1e232e]'
                   }`}
                 >
-                  <p className="text-[14px] leading-relaxed whitespace-pre-wrap">
-                    {message.content}
-                  </p>
+                  {message.type === 'user' ? (
+                    <p className="text-[14px] leading-relaxed whitespace-pre-wrap">
+                      {message.content}
+                    </p>
+                  ) : (
+                    <div className="markdown-content text-[14px] leading-[1.7]">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          // 링크 처리 - 짧게 표시하고 하이퍼링크 적용
+                          a: ({ node, children, href, ...props }) => {
+                            const displayText =
+                              typeof children[0] === 'string' && children[0].length > 50
+                                ? children[0].substring(0, 50) + '...'
+                                : children;
+                            return (
+                              <a
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="break-all text-[#0b3aa2] underline hover:text-[#0a3490]"
+                                title={href}
+                                {...props}
+                              >
+                                {displayText}
+                              </a>
+                            );
+                          },
+                          // 단락
+                          p: ({ node, ...props }) => <p className="mb-3 last:mb-0" {...props} />,
+                          // 리스트 - 간격과 들여쓰기 최적화
+                          ul: ({ node, ...props }) => (
+                            <ul
+                              className="mb-3 ml-4 list-outside list-disc space-y-1.5 [&_ul]:mt-1 [&_ul]:mb-0 [&_ul]:ml-4"
+                              {...props}
+                            />
+                          ),
+                          ol: ({ node, ...props }) => (
+                            <ol
+                              className="mb-3 ml-4 list-outside list-decimal space-y-1.5 [&_ol]:mt-1 [&_ol]:mb-0 [&_ol]:ml-4"
+                              {...props}
+                            />
+                          ),
+                          li: ({ node, ...props }) => (
+                            <li className="pl-1.5 [&>p]:mb-1 [&>p]:last:mb-0" {...props} />
+                          ),
+                          // Blockquote 추가
+                          blockquote: ({ node, ...props }) => (
+                            <blockquote
+                              className="my-2 border-l-4 border-[#0b3aa2] bg-[#e8eef7] py-2 pl-3 text-[#4a5568] italic"
+                              {...props}
+                            />
+                          ),
+                          // 코드
+                          code: ({ node, inline, ...props }) =>
+                            inline ? (
+                              <code
+                                className="rounded bg-[#e1e6ed] px-1.5 py-0.5 font-mono text-[13px]"
+                                {...props}
+                              />
+                            ) : (
+                              <code
+                                className="my-2 block overflow-x-auto rounded bg-[#e1e6ed] p-2 font-mono text-[13px]"
+                                {...props}
+                              />
+                            ),
+                          // 강조
+                          strong: ({ node, ...props }) => (
+                            <strong className="font-semibold text-[#1e232e]" {...props} />
+                          ),
+                          em: ({ node, ...props }) => <em className="italic" {...props} />,
+                          // 제목
+                          h1: ({ node, ...props }) => (
+                            <h1 className="mt-3 mb-2 text-base font-bold" {...props} />
+                          ),
+                          h2: ({ node, ...props }) => (
+                            <h2 className="mt-2 mb-2 text-[15px] font-bold" {...props} />
+                          ),
+                          h3: ({ node, ...props }) => (
+                            <h3 className="mt-2 mb-1 text-[14px] font-semibold" {...props} />
+                          ),
+                          // 구분선
+                          hr: ({ node, ...props }) => (
+                            <hr className="my-3 border-t border-[#e6e9ef]" {...props} />
+                          ),
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
