@@ -23,16 +23,40 @@ function TopRecommendations({ onSelectAnnouncement, favorites, onToggleFavorite,
         });
       }
 
-      const randomPage = Math.floor(Math.random() * 5) + 1;
-      const randomData = await getFeed({
-        page: randomPage,
+      const baseRandomParams = {
+        page: 1,
         page_size: 20,
         exclude_user_id: CURRENT_USER_ID,
-      });
-      if (randomData.items && randomData.items.length > 0) {
-        const randomIndex = Math.floor(Math.random() * randomData.items.length);
+      };
+      const initialRandomData = await getFeed(baseRandomParams);
+      const totalPages = initialRandomData?.meta?.total_pages ?? 0;
+      let randomAnnouncement = null;
+
+      if (initialRandomData.items && initialRandomData.items.length > 0) {
+        const randomIndex = Math.floor(Math.random() * initialRandomData.items.length);
+        randomAnnouncement = initialRandomData.items[randomIndex];
+      }
+
+      if (totalPages > 1) {
+        const randomPage = Math.floor(Math.random() * totalPages) + 1;
+        let randomPageData = initialRandomData;
+
+        if (randomPage !== 1) {
+          randomPageData = await getFeed({
+            ...baseRandomParams,
+            page: randomPage,
+          });
+        }
+
+        if (randomPageData.items && randomPageData.items.length > 0) {
+          const randomIndex = Math.floor(Math.random() * randomPageData.items.length);
+          randomAnnouncement = randomPageData.items[randomIndex];
+        }
+      }
+
+      if (randomAnnouncement) {
         results.push({
-          ...transformAnnouncement(randomData.items[randomIndex]),
+          ...transformAnnouncement(randomAnnouncement),
           type: 'random',
         });
       }
