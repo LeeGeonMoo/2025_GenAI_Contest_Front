@@ -6,7 +6,7 @@ import TopRecommendations from '../components/TopRecommendations';
 import { getFeed } from '../api/feed';
 import { search as searchAPI } from '../api/search';
 import { likePost, unlikePost } from '../api/likes';
-import { getUserLikes } from '../api/users';
+import { getUser, getUserLikes } from '../api/users';
 import { CURRENT_USER_ID } from '../config/constants';
 import { transformAnnouncement } from '../utils/transformAnnouncement';
 
@@ -35,6 +35,9 @@ function MainPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [allAvailableSources, setAllAvailableSources] = useState([]); // 전체 출처 목록
+  const [userName, setUserName] = useState('');
+  const [isUserNameLoaded, setIsUserNameLoaded] = useState(false);
+  const [userNameError, setUserNameError] = useState(false);
   const pageSize = 20;
 
   const activeCategory = categories[activeCategoryIndex];
@@ -170,6 +173,27 @@ function MainPage() {
       setAllAvailableSources(currentSources);
     }
   };
+
+  // 현재 사용자 이름 로드
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadUserName = async () => {
+      try {
+        const user = await getUser(CURRENT_USER_ID);
+        if (isMounted) {
+          setUserName(user?.name ?? '');
+        }
+      } catch (error) {
+        console.error('Failed to load user info:', error);
+      }
+    };
+
+    loadUserName();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // 피드 데이터 로드
   const loadFeed = async (category = null, page = 1) => {
@@ -358,6 +382,38 @@ function MainPage() {
     }
   }, [isSourceDropdownOpen]);
 
+  // 현재 사용자 이름 로드
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadUserName = async () => {
+      try {
+        const user = await getUser(CURRENT_USER_ID);
+        if (!isMounted) return;
+        setUserName(user?.name?.trim() || '');
+        setUserNameError(false);
+      } catch (error) {
+        if (!isMounted) return;
+        console.error('Failed to load user info:', error);
+        setUserName('');
+        setUserNameError(true);
+      } finally {
+        if (isMounted) {
+          setIsUserNameLoaded(true);
+        }
+      }
+    };
+
+    loadUserName();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const trimmedUserName = userName?.trim();
+  const shouldUseFallbackName = userNameError || (isUserNameLoaded && !trimmedUserName);
+  const welcomeName = trimmedUserName || (shouldUseFallbackName ? 'NotiSNU 사용자' : null);
+
   return (
     <div className="min-h-screen bg-white">
       <div className="mx-auto w-full max-w-[1280px] px-6 pt-9 pb-20">
@@ -367,9 +423,11 @@ function MainPage() {
               NotiSNU
             </Link>
             <div className="flex items-center gap-3 text-[15px] text-[#5d6676]">
-              <span>
-                <span className="font-semibold text-[#1e232e]">이건무</span> 님 환영합니다
-              </span>
+              {welcomeName && (
+                <span>
+                  <span className="font-semibold text-[#1e232e]">{welcomeName}</span> 님 환영합니다
+                </span>
+              )}
               <Link
                 to="/mypage"
                 className="rounded-[4px] border border-[#d3d8e0] px-[10px] py-[6px] text-[14px] font-medium text-[#1e232e] transition-colors hover:bg-[#f8f9fb]"

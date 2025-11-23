@@ -72,6 +72,9 @@ function MyPage() {
     email: '',
     interests: [],
   });
+  const [profileName, setProfileName] = useState('');
+  const [isProfileNameLoaded, setIsProfileNameLoaded] = useState(false);
+  const [profileNameError, setProfileNameError] = useState(false);
 
   // 좋아요 토글 함수 (API 호출)
   const toggleLikedNotice = async (id) => {
@@ -198,19 +201,25 @@ function MyPage() {
       setProfileError(null);
       try {
         const userData = await getUser(CURRENT_USER_ID);
+        const trimmedName = userData.name?.trim() || '';
         setProfileForm({
-          name: userData.name || '',
+          name: trimmedName,
           college: userData.college || '',
           department: userData.department || '',
           grade: userData.grade || '',
           email: userData.email || '',
           interests: userData.interests || [],
         });
+        setProfileName(trimmedName);
+        setProfileNameError(false);
       } catch (error) {
         console.error('Error loading profile:', error);
         setProfileError('프로필을 불러오지 못했습니다.');
+        setProfileName('');
+        setProfileNameError(true);
       } finally {
         setIsLoadingProfile(false);
+        setIsProfileNameLoaded(true);
       }
     };
 
@@ -236,6 +245,10 @@ function MyPage() {
     loadNotifications();
   }, []);
 
+  const trimmedProfileName = profileName?.trim();
+  const shouldUseProfileFallback = profileNameError || (isProfileNameLoaded && !trimmedProfileName);
+  const displayName = trimmedProfileName || (shouldUseProfileFallback ? 'NotiSNU 사용자' : null);
+
   return (
     <div className="min-h-screen bg-white">
       <div className="mx-auto w-full max-w-[1280px] px-6 pt-9 pb-20">
@@ -244,9 +257,11 @@ function MyPage() {
             NotiSNU
           </Link>
           <div className="flex items-center gap-3 text-[15px] text-[#5d6676]">
-            <span>
-              <span className="font-semibold text-[#1e232e]">이건무</span> 님 환영합니다
-            </span>
+            {displayName && (
+              <span>
+                <span className="font-semibold text-[#1e232e]">{displayName}</span> 님 환영합니다
+              </span>
+            )}
             <Link
               to="/"
               className="rounded-[4px] border border-[#d3d8e0] px-[10px] py-[6px] text-[14px] font-medium text-[#1e232e] transition-colors hover:bg-[#f8f9fb]"
@@ -294,7 +309,7 @@ function MyPage() {
               <section className="overflow-hidden rounded-[6px] border border-[#c5cedd] bg-white">
                 <div className="border-b border-[#c5cedd] px-4 py-3">
                   <h2 className="text-[16px] font-semibold text-[#1e232e]">
-                    ❤️ 이건무 님의 관심 활동
+                    ❤️ {displayName ? `${displayName} 님의 ` : ''}관심 활동
                   </h2>
                 </div>
                 <AnnouncementList
@@ -355,6 +370,10 @@ function MyPage() {
                               grade: profileForm.grade,
                               interests: profileForm.interests,
                             });
+                            const nextName = profileForm.name?.trim() || '';
+                            setProfileName(nextName);
+                            setProfileNameError(false);
+                            setIsProfileNameLoaded(true);
                             setShowSaveSuccess(true);
                             setTimeout(() => {
                               setShowSaveSuccess(false);
